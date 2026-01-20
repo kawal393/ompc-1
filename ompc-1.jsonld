@@ -1,0 +1,25 @@
+{
+  "@context": "https://ompc-council.org/ns/core#",
+  "@type": "GPAI_Model_Provenance",
+  "declaration": {
+    "standard": "OMPC-1",
+    "published": "2026-01-21",
+    "nature": "reference_schema"
+  },
+  "model_identity": {
+    "model_name": "REQUIRED",
+    "provider": "REQUIRED",
+    "version": "REQUIRED"
+  },
+  "regulatory_alignment": {
+    "eu_ai_act": "Annex XI",
+    "sustainability_reporting": "AASB S2 / IFRS S2"
+  },
+  "compute_disclosure": {
+    "energy_kwh": "DECIMAL",
+    "carbon_intensity": "gCO2e_per_kwh"
+  },
+  "external_evidence": {
+    "reference_uri": "URI"
+  }
+}
