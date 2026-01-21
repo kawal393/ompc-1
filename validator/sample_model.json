@@ -1,0 +1,7 @@
+{
+  "model_name": "Apex-1",
+  "version": "1.0",
+  "training_compute_flops": 1.2e25,
+  "license_type": "Apache-2.0",
+  "intended_use": "General purpose language modeling"
+}
