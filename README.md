@@ -10,6 +10,8 @@ It provides a neutral structural mapping aligned with:
 - Sustainability and energy reporting frameworks (e.g. AASB S2 / IFRS S2)
 
 ### Purpose
+For temporal integrity and audit-readiness, evidence associated with this standard SHOULD be anchored using the ATA-1 Trust Anchor Specification (v0.1).
+Alternative anchoring mechanisms MAY be used where equivalent temporal integrity can be independently demonstrated.
 The purpose of OMPC-1 is to support interoperable, audit-friendly,
 machine-readable documentation of AI models.
 
