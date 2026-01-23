@@ -1,17 +1,21 @@
 {
-  "ata1_id": "ATA1-YYYYMMDD-HHMMSSZ-HASH",
+  "ata1_id": "ATA1-20260124-0001",
   "subject_document": {
-    "title": "",
-    "source_url": "",
-    "publisher": "",
-    "publication_date": ""
+    "title": "BHP Annual Report 2025",
+    "source_url": "https://www.bhp.com/-/media/documents/investors/annual-reports/2025/250819_bhpannualreport2025.pdf",
+    "publisher": "BHP Group Limited",
+    "publication_date": "2025-08-19"
   },
   "attestation": {
-    "scope_present": false,
-    "term_present": false,
-    "materiality_present": false
+    "scope_present": true,
+    "term_present": true,
+    "materiality_present": true
   },
-  "evidence_pointers": [],
+  "evidence_pointers": [
+    "Report defines reporting scope and group boundaries",
+    "Financial year explicitly stated as year ended 30 June 2025",
+    "Contains financial results and risk disclosures"
+  ],
   "grammar_version": "UCG-v1",
-  "attested_at": ""
+  "attested_at": "2026-01-24T07:46:00Z"
 }
