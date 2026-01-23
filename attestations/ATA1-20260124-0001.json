@@ -1,0 +1,17 @@
+{
+  "attestation_id": "ATA1-20260124-0001",
+  "subject_entity": "BHP Group Limited",
+  "subject_document": "https://www.bhp.com/-/media/documents/investors/annual-reports/2025/250819_bhpannualreport2025.pdf",
+  "verification_date": "2026-01-24T07:46:00Z",
+  "grammar_version": "UCG-v1",
+  "results": {
+    "scope_located": true,
+    "term_located": true,
+    "materiality_located": true
+  },
+  "pointers": [
+    "Annual Report defines reporting scope and group boundaries",
+    "Financial year explicitly stated as year ended 30 June 2025",
+    "Material financial results and risk disclosures present"
+  ]
+}
