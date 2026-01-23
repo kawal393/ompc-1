@@ -1,0 +1,17 @@
+{
+  "ata1_id": "ATA1-YYYYMMDD-HHMMSSZ-HASH",
+  "subject_document": {
+    "title": "",
+    "source_url": "",
+    "publisher": "",
+    "publication_date": ""
+  },
+  "attestation": {
+    "scope_present": false,
+    "term_present": false,
+    "materiality_present": false
+  },
+  "evidence_pointers": [],
+  "grammar_version": "UCG-v1",
+  "attested_at": ""
+}
