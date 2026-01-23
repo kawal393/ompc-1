@@ -1,13 +1,14 @@
-# OMPC-1 Evidence Ledger
-
-This ledger records timestamped ATA1 attestations derived from public documentation.
-Entries are append-only.
-
----
+# OMPC-1 Ledger
 
 ## Entry 0001
-- **Date:** 2026-01-24
-- **Entity:** Pending
-- **Document:** Pending
-- **ATA1 ID:** Pending
-- **Result:** Not yet attested
+
+- **ATA ID:** ATA1-20260124-0001  
+- **Entity:** BHP Group Limited  
+- **Document:** BHP Annual Report 2025  
+- **Source:** https://www.bhp.com/-/media/documents/investors/annual-reports/2025/250819_bhpannualreport2025.pdf  
+- **Grammar Version:** UCG-v1  
+- **Attested At:** 2026-01-24T07:46:00Z  
+- **Result:** Scope ✓ | Term ✓ | Materiality ✓  
+
+> This entry records the presence of required disclosure elements at the time of attestation.  
+> No assessment of accuracy, quality, or compliance is performed.
