@@ -7,8 +7,8 @@
 - **Document:** BHP Annual Report 2025  
 - **Source:** https://www.bhp.com/-/media/documents/investors/annual-reports/2025/250819_bhpannualreport2025.pdf  
 - **Grammar Version:** UCG-v1  
-- **Attested At:** 2026-01-24T07:46:00Z  
+- **Recorded At:** 2026-01-24T07:46:00Z
 - **Result:** Scope ✓ | Term ✓ | Materiality ✓  
 
-> This entry records the presence of required disclosure elements at the time of attestation.  
+> This entry represents a non-authoritative timestamp of public data presence.
 > No assessment of accuracy, quality, or compliance is performed.
