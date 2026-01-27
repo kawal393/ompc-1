@@ -40,3 +40,6 @@ APEX does not provide legal or financial advice.
 APEX is not affiliated with, endorsed by, or connected to any audited organization.
 
 The Ledger is maintained independently for documentation and risk-evaluation purposes.
+## Registry Entries
+
+- ATA-2026-0001 — BHP Group Limited — Mining — Australia — Status: Attestation Published
