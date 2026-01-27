@@ -43,3 +43,4 @@ The Ledger is maintained independently for documentation and risk-evaluation pur
 ## Registry Entries
 
 - ATA-2026-0001 — BHP Group Limited — Mining — Australia — Status: Attestation Published
+- ATA-2026-0002 — Microsoft Corporation — Technology — United States — Status: Attestation Pending
