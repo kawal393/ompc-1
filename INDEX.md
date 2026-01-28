@@ -1,4 +1,4 @@
-# APEX Global Ledger
+# APEX Global Ledger — 2026
 
 ## Purpose
 The APEX Global Ledger is an independent registry for documenting publicly disclosed AI systems, governance statements, and risk-related disclosures made by large organizations.
