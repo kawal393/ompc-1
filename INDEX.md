@@ -72,4 +72,7 @@ The Ledger is maintained independently for documentation and risk-evaluation pur
 • ATA-2026-0013 — Reliance Jio Infocomm Ltd. — Telecom / Data — India — Status: Unverified
 
 • ATA-2026-0014 — Tata Consultancy Services — Enterprise AI — India — Status: Unverified
+
 • ATA-2026-0015 — BlackRock, Inc. — Capital Allocation Layer — United States — Status: Attestation Published
+
+• ATA-2026-0016 — Reinsurance / Insurability Layer — Systemic Risk Backstop — Global — Status: Observation Only
