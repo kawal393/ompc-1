@@ -45,5 +45,18 @@ APEX is not affiliated with, endorsed by, or connected to any audited organizati
 The Ledger is maintained independently for documentation and risk-evaluation purposes.
 ## Registry Entries
 
-- ATA-2026-0001 — BHP Group Limited — Mining — Australia — Status: Attestation Published
-- ATA-2026-0002 — Microsoft Corporation — Technology — United States — Status: Attestation Published
+• ATA-2026-0001 — BHP Group — Industrial Mining — Australia — Status: Attestation Published
+• ATA-2026-0002 — Microsoft Corporation — Cloud / AI — United States — Status: Attestation Published
+
+• ATA-2026-0003 — Alphabet Inc. — Data / Search — United States — Status: Unverified
+• ATA-2026-0004 — Amazon.com, Inc. — Logistics / Cloud — United States — Status: Unverified
+• ATA-2026-0005 — Meta Platforms, Inc. — Open Models — United States — Status: Unverified
+• ATA-2026-0006 — NVIDIA Corporation — Compute — United States — Status: Unverified
+• ATA-2026-0007 — JPMorgan Chase & Co. — Finance — United States — Status: Unverified
+• ATA-2026-0008 — UnitedHealth Group — Healthcare — United States — Status: Unverified
+• ATA-2026-0009 — Tesla, Inc. — Robotics / Automation — United States — Status: Unverified
+• ATA-2026-0010 — Apple Inc. — Consumer Platforms — United States — Status: Unverified
+• ATA-2026-0011 — Alibaba Group — Commerce / AI — China — Status: Unverified
+• ATA-2026-0012 — Tencent Holdings — Digital Infrastructure — China — Status: Unverified
+• ATA-2026-0013 — Reliance Jio Infocomm Ltd. — Telecom / Data — India — Status: Unverified
+• ATA-2026-0014 — Tata Consultancy Services — Enterprise AI — India — Status: Unverified
