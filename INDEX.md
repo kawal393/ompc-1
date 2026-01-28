@@ -13,6 +13,9 @@ APEX entries are based solely on publicly available documents such as:
 - Public policy statements
 
 No private data is used.
+## Record Anchor
+
+GitHub commit history is the canonical timestamp for all ledger entries.
 
 ## Two-Layer Structure
 Each APEX entry follows a two-layer model:
@@ -44,4 +47,3 @@ The Ledger is maintained independently for documentation and risk-evaluation pur
 
 - ATA-2026-0001 — BHP Group Limited — Mining — Australia — Status: Attestation Published
 - ATA-2026-0002 — Microsoft Corporation — Technology — United States — Status: Attestation Published
-Record Anchor: GitHub commit history is the canonical timestamp for all ledger entries.
