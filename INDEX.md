@@ -49,7 +49,7 @@ The Ledger is maintained independently for documentation and risk-evaluation pur
 
 • ATA-2026-0002 — Microsoft Corporation — Cloud / AI — United States — Status: Attestation Published
 
-• ATA-2026-0003 — Alphabet Inc. — Data / Search — United States — Status: Unverified
+• ATA-2026-0003 — Alphabet Inc. — Data / Search — United States —Status: Attestation Published
 
 • ATA-2026-0004 — Amazon.com, Inc. — Logistics / Cloud — United States — Status: Unverified
 
