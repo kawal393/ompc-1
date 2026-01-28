@@ -51,7 +51,7 @@ The Ledger is maintained independently for documentation and risk-evaluation pur
 
 • ATA-2026-0003 — Alphabet Inc. — Data / Search — United States —Status: Attestation Published
 
-• ATA-2026-0004 — Amazon.com, Inc. — Logistics / Cloud — United States — Status: Unverified
+• ATA-2026-0004 — Amazon.com, Inc. — Logistics / Cloud — United States — Status: Attestation Published 
 
 • ATA-2026-0005 — Meta Platforms, Inc. — Open Models — United States — Status: Unverified
 
