@@ -27,3 +27,5 @@ https://www.microsoft.com/investor/reports/ar25/index.html
 >“Our Cloud and AI infrastructure … Every Azure region is now AI-first and can support liquid cooling, increasing the fungibility and the flexibility of our fleet.”
 >Source: Microsoft FY2025 Annual Report (AR25)  
 https://www.microsoft.com/investor/reports/ar25/index.html
+
+Change Policy: This attestation is recorded as-is and will not be edited retroactively. New information requires a new entry ID.
