@@ -44,3 +44,4 @@ The Ledger is maintained independently for documentation and risk-evaluation pur
 
 - ATA-2026-0001 — BHP Group Limited — Mining — Australia — Status: Attestation Published
 - ATA-2026-0002 — Microsoft Corporation — Technology — United States — Status: Attestation Published
+Record Anchor: GitHub commit history is the canonical timestamp for all ledger entries.
