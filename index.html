@@ -1,829 +1,1183 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-AU">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>APEX — OMPC / ATA</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="color-scheme" content="dark" />
+  <title>APEX — OMPC / ATA</title>
+
   <style>
     :root{
-      --bg:#05060a;
-      --panel: rgba(12,14,20,.72);
-      --panel2: rgba(12,14,20,.55);
+      --bg0:#050607;
+      --bg1:#07090b;
+      --panel: rgba(14,16,19,.72);
+      --panel2: rgba(10,12,15,.55);
       --stroke: rgba(255,255,255,.08);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
-      --gold: #d2b25d;
-      --gold2:#b89642;
-      --shadow: 0 14px 44px rgba(0,0,0,.55);
-      --r: 18px;
-      --r2: 14px;
-      --max: 1080px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); }
-    a{ color:inherit; }
-    button{ font-family:inherit; }
-
-    /* Background: particles + glow */
-    #bg {
-      position: fixed; inset: 0;
-      width:100%; height:100%;
-      z-index: 0;
-      background: radial-gradient(1200px 700px at 50% 25%, rgba(210,178,93,.10), transparent 65%),
-                  radial-gradient(900px 520px at 50% 62%, rgba(120,170,255,.05), transparent 62%),
-                  radial-gradient(900px 520px at 20% 88%, rgba(210,178,93,.06), transparent 62%),
-                  linear-gradient(180deg, #05060a, #04050a 58%, #02030a);
-    }
-    #noise {
-      position: fixed; inset:0; z-index:1;
-      pointer-events:none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
-      mix-blend-mode: overlay;
-      opacity:.22;
-    }
-    #sigilWrap{
-      position: fixed; inset:0; z-index:1;
-      pointer-events:none;
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
-      padding-bottom: 3.2vh;
-      opacity:.24;
-      filter: drop-shadow(0 28px 90px rgba(0,0,0,.85));
-    }
-    #sigil{
-      width:min(720px, 92vw);
-      max-height: 62vh;
-      object-fit: contain;
-      transform: translateY(10px);
-      opacity:.75;
+      --stroke2: rgba(210,178,93,.22);
+      --text:#e9edf3;
+      --muted:#aeb7c2;
+      --muted2:#7f8a97;
+      --gold:#d2b25d;
+      --gold2:#f2d88c;
+      --blue:#77b6ff;
+      --danger:#ff5d5d;
+      --shadow: 0 22px 70px rgba(0,0,0,.55);
+      --shadow2: 0 12px 40px rgba(0,0,0,.52);
+      --radius: 18px;
+      --radius2: 26px;
+      --max: 1120px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
 
-    /* App shell */
-    .app { position: relative; z-index: 2; min-height: 100%; padding: 16px 14px 40px; }
-    .wrap { max-width: var(--max); margin: 0 auto; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 55% 10%, rgba(210,178,93,.14), transparent 55%),
+        radial-gradient(920px 520px at 20% 35%, rgba(120,190,255,.10), transparent 55%),
+        radial-gradient(1100px 760px at 50% 120%, rgba(210,178,93,.09), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* FULL-SCREEN PARTICLES LAYER */
+    #bg{
+      position:fixed; inset:0;
+      z-index:0;
+      pointer-events:none;
+      opacity:1;
+    }
+
+    /* SIGIL / AURA (subtle) */
+    .sigil{
+      position:fixed; inset:0;
+      z-index:1;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.15), transparent 62%),
+        radial-gradient(800px 520px at 50% 60%, rgba(0,0,0,.18), transparent 60%);
+      mix-blend-mode:screen;
+      opacity:.55;
+    }
+
+    /* LAYOUT */
+    .wrap{
+      position:relative;
+      z-index:2;
+      max-width:var(--max);
+      margin:0 auto;
+      padding:24px 18px 60px;
+    }
+
+    /* TOP BAR */
     .topbar{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      padding: 10px 10px 6px;
-      margin: 0 auto 10px;
-      max-width: var(--max);
-      color: var(--muted);
-      font-size: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      border-radius:999px;
+      background: rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
     }
+
     .brand{
-      display:flex; align-items:center; gap:10px; min-width: 0;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 0;
     }
-    .brand img{
-      width:22px; height:22px; border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 6px 22px rgba(0,0,0,.4);
+
+    .logo{
+      width:42px; height:42px;
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid rgba(210,178,93,.25);
+      box-shadow: 0 0 0 1px rgba(0,0,0,.35) inset, 0 10px 30px rgba(0,0,0,.45);
+      position:relative;
+      flex:0 0 auto;
+      background: radial-gradient(circle at 30% 30%, rgba(242,216,140,.18), rgba(0,0,0,.45));
     }
+
+    .logo img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+      filter: saturate(1.05) contrast(1.05);
+      transform: scale(1.04);
+    }
+
+    .brandText{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .brandText .kicker{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:rgba(210,178,93,.92);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brandText .sub{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .topActions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
     .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding: 7px 10px;
-      border: 1px solid var(--stroke);
-      border-radius: 999px;
-      background: rgba(10,12,18,.55);
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      white-space: nowrap;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,12,14,.55);
+      color:var(--text);
+      font-size:12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.30);
+      backdrop-filter: blur(8px);
+      user-select:none;
     }
     .dot{
-      width:8px; height:8px; border-radius:999px;
-      background: #2bd96b;
-      box-shadow: 0 0 18px rgba(43,217,107,.65);
+      width:8px;height:8px;border-radius:999px;background: #3aff85;
+      box-shadow: 0 0 14px rgba(58,255,133,.55);
     }
-    .btnRow{
-      display:flex; gap:10px; align-items:center; justify-content:flex-end;
-      flex-wrap: wrap;
-    }
+
     .btn{
       cursor:pointer;
-      padding: 9px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(210,178,93,.32);
-      background: linear-gradient(180deg, rgba(210,178,93,.10), rgba(0,0,0,.0));
-      color: rgba(255,255,255,.9);
-      font-weight: 650;
-      letter-spacing: .2px;
-      font-size: 12px;
-      box-shadow: 0 12px 36px rgba(0,0,0,.35);
-      transition: transform .12s ease, border-color .12s ease, background .12s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); border-color: rgba(210,178,93,.52); }
-    .btn:active{ transform: translateY(0px); }
-    .btn.secondary{
-      border-color: rgba(255,255,255,.12);
-      background: rgba(10,12,18,.52);
-      font-weight: 600;
-    }
-
-    .panel{
-      border: 1px solid var(--stroke);
-      border-radius: var(--r);
-      background: var(--panel);
-      box-shadow: var(--shadow);
+      appearance:none;
+      border:1px solid rgba(210,178,93,.18);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:999px;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+      box-shadow: 0 12px 30px rgba(0,0,0,.32);
       backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      white-space:nowrap;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(210,178,93,.45);
+      box-shadow: 0 18px 44px rgba(0,0,0,.48);
+      background: rgba(210,178,93,.08);
+    }
+    .btn:active{transform: translateY(0px) scale(.99)}
+    .btn.gold{
+      border-color: rgba(210,178,93,.42);
+      background: linear-gradient(180deg, rgba(210,178,93,.18), rgba(0,0,0,.12));
     }
 
+    /* HERO */
     .hero{
-      padding: 18px;
-      margin-top: 8px;
+      margin-top:18px;
+      border-radius: var(--radius2);
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(12,14,16,.72), rgba(9,10,12,.55));
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
     }
-    h1{
-      margin: 0 0 8px;
-      line-height: 1.05;
-      font-size: 34px;
-      letter-spacing: -0.6px;
+    .hero:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.18), transparent 60%),
+        radial-gradient(780px 520px at 20% 50%, rgba(120,190,255,.10), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      opacity:.75;
+      pointer-events:none;
     }
-    .sub{
-      margin:0 0 14px;
-      color: var(--muted);
-      font-size: 13px;
-      max-width: 72ch;
-    }
-    .heroActions{ display:flex; gap:10px; flex-wrap: wrap; }
-
-    .grid2{
+    .heroInner{
+      position:relative;
+      padding:22px 18px 18px;
       display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap: 12px;
-      margin-top: 12px;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
     }
     @media (max-width: 860px){
-      .grid2{ grid-template-columns: 1fr; }
-      h1{ font-size: 28px; }
+      .heroInner{grid-template-columns: 1fr}
     }
 
-    .mini{
-      padding: 12px 14px;
-      background: var(--panel2);
-      border-radius: var(--r2);
-      border: 1px solid var(--stroke);
+    .hTitle{
+      font-size: 44px;
+      line-height:1.02;
+      margin:0 0 10px 0;
+      letter-spacing:-.02em;
     }
-    .miniTitle{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-bottom: 10px;
-      color: rgba(255,255,255,.82);
-      font-weight: 700;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .7px;
+    @media (max-width: 520px){
+      .hTitle{font-size: 34px}
     }
-    .kv{
-      display:flex; flex-wrap: wrap; gap: 8px 10px;
+    .hSub{
+      margin:0 0 14px 0;
+      color:var(--muted);
+      max-width:62ch;
+      font-size: 14px;
+      line-height:1.55;
+    }
+    .ctaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:10px;
+    }
+
+    .panelGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .panel{
+      border:1px solid rgba(255,255,255,.09);
+      background: rgba(0,0,0,.22);
+      border-radius: var(--radius);
+      padding:12px 12px;
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      position:relative;
+      overflow:hidden;
+    }
+    .panel:before{
+      content:"";
+      position:absolute; inset:-1px;
+      border-radius: inherit;
+      pointer-events:none;
+      background: radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.15), transparent 62%);
+      opacity:.65;
+    }
+    .panel h3{
+      margin:0 0 6px 0;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(210,178,93,.95);
+      position:relative;
+    }
+    .panel p{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
       color: var(--muted);
-      font-size: 12px;
-    }
-    .kv span{
-      padding: 7px 10px;
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 999px;
-      background: rgba(0,0,0,.18);
-      white-space: nowrap;
+      position:relative;
     }
 
-    .tabs{
-      display:flex; gap:8px; flex-wrap: wrap;
-      margin-top: 12px;
+    .statRow{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      position:relative;
     }
-    .tab{
-      cursor:pointer;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.12);
-      color: rgba(255,255,255,.82);
-      font-weight: 650;
-      font-size: 12px;
+    .stat{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      color:var(--muted);
+      backdrop-filter: blur(10px);
     }
-    .tab.active{
-      border-color: rgba(210,178,93,.45);
-      background: rgba(210,178,93,.10);
-    }
+    .stat b{color: var(--text); font-weight:600}
 
-    .searchRow{
-      display:flex; gap:10px; align-items:center; justify-content:space-between;
-      margin: 14px 0 10px;
-      flex-wrap: wrap;
+    /* TOOLBAR */
+    .toolbar{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
     }
     .search{
-      flex: 1;
-      min-width: 220px;
-      display:flex; align-items:center; gap:10px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
-      color: rgba(255,255,255,.75);
+      flex: 1 1 340px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      border-radius:999px;
+      padding:10px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+      min-width:0;
     }
     .search input{
-      flex:1; border:0; outline:0; background: transparent;
-      color: rgba(255,255,255,.92);
-      font-size: 13px;
+      flex:1;
+      background: transparent;
+      border:0;
+      outline:none;
+      color:var(--text);
+      font-size:13px;
+      min-width: 0;
     }
-    .rightMeta{
-      display:flex; align-items:center; gap:10px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    select{
-      border-radius: 999px;
-      padding: 9px 12px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.25);
-      color: rgba(255,255,255,.86);
-      outline: none;
+    .search .hint{color:var(--muted2); font-size:12px; white-space:nowrap}
+    .select{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+      outline:none;
+      cursor:pointer;
     }
 
-    .cards{
+    /* CARDS */
+    .grid{
+      margin-top:12px;
       display:grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      padding-bottom: 34vh; /* keep clear of sigil */
+      gap:12px;
     }
     @media (max-width: 860px){
-      .cards{ grid-template-columns: 1fr; }
+      .grid{grid-template-columns: 1fr}
     }
     .card{
-      padding: 14px;
-      border-radius: var(--r2);
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      box-shadow: 0 16px 46px rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      border-radius: var(--radius);
+      padding:12px 12px 10px;
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      position:relative;
+      overflow:hidden;
+
+      transform-style: preserve-3d;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
-    .cardTop{
-      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    .card:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(780px 360px at 30% 0%, rgba(210,178,93,.15), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      opacity:.65;
+      pointer-events:none;
+    }
+    .card:hover{
+      transform: translateY(-4px) perspective(900px) rotateX(2deg) rotateY(-2deg);
+      box-shadow: 0 26px 90px rgba(0,0,0,.62);
+      border-color: rgba(210,178,93,.26);
+    }
+
+    .metaTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      position:relative;
     }
     .id{
       font-family: var(--mono);
-      color: rgba(210,178,93,.82);
-      font-size: 11px;
-      letter-spacing: .3px;
-    }
-    .name{
-      margin: 6px 0 2px;
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: -.2px;
-    }
-    .sum{
-      margin: 0 0 10px;
-      color: var(--muted);
-      font-size: 12.5px;
-      line-height: 1.35;
-    }
-    .tagRow{ display:flex; gap:8px; flex-wrap: wrap; margin-bottom: 10px; }
-    .tag{
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      font-size: 11px;
-      color: rgba(255,255,255,.78);
+      font-size:12px;
+      color: rgba(210,178,93,.9);
+      letter-spacing:.06em;
     }
     .badge{
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(210,178,93,.40);
-      background: rgba(210,178,93,.10);
-      color: rgba(255,255,255,.85);
-      font-size: 11px;
-      white-space: nowrap;
+      font-size:11px;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      color: var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.1em;
+      white-space:nowrap;
     }
-    .cardBtns{
-      display:flex; gap:8px; flex-wrap: wrap;
+    .badge.verified{
+      border-color: rgba(58,255,133,.28);
+      color: rgba(170,255,205,.95);
+      background: rgba(58,255,133,.08);
+      box-shadow: 0 0 18px rgba(58,255,133,.12);
     }
-    .tiny{
-      cursor:pointer;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.15);
-      color: rgba(255,255,255,.86);
-      font-weight: 700;
-      font-size: 11px;
-    }
-    .tiny.primary{
-      border-color: rgba(210,178,93,.45);
-      background: rgba(210,178,93,.10);
+    .badge.published{
+      border-color: rgba(210,178,93,.25);
+      color: rgba(242,216,140,.95);
+      background: rgba(210,178,93,.08);
+      box-shadow: 0 0 18px rgba(210,178,93,.12);
     }
 
-    /* Modal viewer */
-    .modal{
-      position: fixed; inset: 0;
-      display:none;
-      align-items: stretch;
-      justify-content:center;
-      z-index: 50;
-      background: rgba(0,0,0,.58);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding: 14px;
+    .name{
+      margin:8px 0 2px;
+      font-size:16px;
+      font-weight:650;
+      position:relative;
     }
-    .modal.show{ display:flex; }
-    .modalBox{
-      width: min(980px, 100%);
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(8,10,16,.92);
-      box-shadow: 0 30px 110px rgba(0,0,0,.72);
+    .summary{
+      margin:0 0 10px;
+      font-size:12px;
+      line-height:1.45;
+      color: var(--muted);
+      position:relative;
+      max-width: 70ch;
+    }
+    .tags{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin: 0 0 10px;
+      position:relative;
+    }
+    .tag{
+      font-size:11px;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+    }
+
+    .cardActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      position:relative;
+    }
+    .mini{
+      cursor:pointer;
+      border:1px solid rgba(210,178,93,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:11px;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    }
+    .mini:hover{
+      transform: translateY(-1px);
+      border-color: rgba(210,178,93,.45);
+      background: rgba(210,178,93,.08);
+      box-shadow: 0 16px 40px rgba(0,0,0,.45);
+    }
+
+    /* FOOTER */
+    .foot{
+      margin-top:18px;
+      padding:14px 10px;
+      color: var(--muted2);
+      font-size:12px;
+      text-align:center;
+    }
+
+    /* MODAL VIEWER */
+    .modal{
+      position:fixed; inset:0;
+      z-index:50;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      background: rgba(0,0,0,.70);
+      backdrop-filter: blur(10px);
+    }
+    .modal.open{display:flex}
+    .modalCard{
+      width:min(980px, 100%);
+      max-height: min(86vh, 820px);
+      border-radius: 22px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,12,14,.80);
+      box-shadow: 0 30px 120px rgba(0,0,0,.70);
       overflow:hidden;
       display:flex;
-      flex-direction: column;
+      flex-direction:column;
+      position:relative;
+    }
+    .modalCard:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.18), transparent 60%),
+        radial-gradient(700px 500px at 20% 60%, rgba(120,190,255,.12), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      opacity:.9;
+      pointer-events:none;
     }
     .modalHead{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding: 12px 12px;
-      border-bottom: 1px solid rgba(255,255,255,.10);
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.18);
     }
     .modalTitle{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
       min-width:0;
-      display:flex; flex-direction: column;
-      gap: 2px;
     }
-    .modalTitle strong{ font-size: 13px; }
-    .modalTitle span{ color: var(--muted); font-size: 11px; font-family: var(--mono); }
+    .modalTitle b{
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .modalTitle span{
+      font-family: var(--mono);
+      font-size:12px;
+      color: rgba(210,178,93,.92);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
     .modalBody{
-      padding: 14px;
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
-      color: rgba(255,255,255,.92);
-    }
-    .modalBody pre{
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      padding: 12px;
+      position:relative;
+      padding:12px;
       overflow:auto;
     }
-    .md h1,.md h2,.md h3{ margin-top: 18px; }
-    .md a{ color: rgba(210,178,93,.95); }
-    .md blockquote{
-      margin: 12px 0;
-      padding: 10px 12px;
-      border-left: 3px solid rgba(210,178,93,.55);
-      background: rgba(210,178,93,.08);
-      border-radius: 12px;
-      color: rgba(255,255,255,.86);
+    pre.viewer{
+      margin:0;
+      font-family: var(--mono);
+      font-size:12px;
+      line-height:1.55;
+      color: #e9edf3;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .closeX{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      color:var(--text);
+      width:40px; height:40px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      font-size:16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
     }
 
-    /* Footer line */
-    .foot{
-      color: rgba(255,255,255,.42);
-      font-size: 11px;
+    /* TOAST */
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      z-index:80;
+      display:none;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(210,178,93,.20);
+      background: rgba(0,0,0,.55);
+      color: var(--text);
+      font-size:12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.50);
+      backdrop-filter: blur(10px);
+      max-width: min(90vw, 720px);
       text-align:center;
-      margin-top: 14px;
-      padding-bottom: 10px;
     }
+    .toast.show{display:block}
   </style>
 </head>
+
 <body>
   <canvas id="bg"></canvas>
-  <div id="noise"></div>
+  <div class="sigil"></div>
 
-  <!-- faint sigil watermark -->
-  <div id="sigilWrap" aria-hidden="true">
-    <img id="sigil" src="apex-sigil.png" alt="">
-  </div>
-
-  <div class="app">
+  <div class="wrap">
     <div class="topbar">
       <div class="brand">
-        <img src="apex-sigil.png" alt="APEX">
-        <div class="pill">APEX — OMPC / ATA <span style="opacity:.55;">|</span> Authority Registry · Claims vs Reality · Market Lens</div>
+        <div class="logo" aria-label="APEX Sigil">
+          <!-- PNG first (repo root: apex-sigil.png). If it fails, SVG fallback persists -->
+          <img id="logoImg" src="./apex-sigil.png" alt="APEX" />
+        </div>
+        <div class="brandText">
+          <div class="kicker">APEX — OMPC / ATA</div>
+          <div class="sub">Authority Registry • Claims vs Reality • Market Lens</div>
+        </div>
       </div>
-      <div class="btnRow">
-        <div class="pill"><span class="dot"></span><span id="liveText">LIVE SURFACE</span></div>
-        <button class="btn secondary" id="repoBtn">REPO</button>
-        <button class="btn" id="copyCitationTop">COPY CITATION PATTERN</button>
+
+      <div class="topActions">
+        <div class="pill"><span class="dot"></span> LIVE SURFACE</div>
+        <button class="btn" id="btnRepo">Repo</button>
+        <button class="btn gold" id="btnCopyPattern">Copy Citation Pattern</button>
       </div>
     </div>
 
-    <div class="wrap">
-      <div class="panel hero">
-        <h1>Authority you can cite.<br/>Evidence you can anchor.</h1>
-        <p class="sub">
-          Public registry of records (ATA/OMPC style) plus a second layer that converts records into structured intelligence:
-          mismatch signals, catalysts, timelines, watchlists. Clean. Calm. Weapon-grade.
-        </p>
+    <section class="hero" id="top">
+      <div class="heroInner">
+        <div>
+          <h1 class="hTitle">Authority you can cite.<br/>Evidence you can anchor.</h1>
+          <p class="hSub">
+            Public attestation ledger (ATA/OMPC style) plus a second layer that converts records into structured intelligence:
+            mismatch signals, catalysts, timelines, watchlists. Clean. Calm. Weapon-grade.
+          </p>
 
-        <div class="heroActions">
-          <button class="btn" data-route="#/ledger">ENTER LEDGER</button>
-          <button class="btn secondary" data-route="#/lens">OPEN MARKET LENS</button>
-          <button class="btn secondary" id="forceRefresh">FORCE REFRESH</button>
-        </div>
-
-        <div class="grid2">
-          <div class="mini">
-            <div class="miniTitle">
-              <span>LIVE SURFACE</span>
-              <span class="badge" id="registryBadge">Registry: —</span>
-            </div>
-            <div class="kv" id="kvLeft">
-              <span id="kvEntries">Entries: —</span>
-              <span id="kvViewer">Viewer: —</span>
-              <span id="kvTz">Timezone: —</span>
-              <span id="kvLocale">Locale: —</span>
-              <span id="kvNow">Now: —</span>
-            </div>
-
-            <div class="tabs" style="margin-top:12px;">
-              <button class="tab active" data-route="#/ledger">LEDGER</button>
-              <button class="tab" data-route="#/lens">MARKET LENS</button>
-              <button class="tab" data-route="#/pricing">PRICING</button>
-              <button class="tab" data-route="#/contact">CONTACT</button>
-            </div>
+          <div class="ctaRow">
+            <button class="btn gold" id="btnEnter">Enter Ledger</button>
+            <button class="btn" id="btnLens">Open Market Lens</button>
+            <button class="btn" id="btnRefresh">Force Refresh</button>
           </div>
 
-          <div class="mini">
-            <div class="miniTitle">
-              <span>MARKET LENS (PAID LAYER)</span>
-              <span class="badge">Mismatch Watch</span>
-            </div>
-            <div class="sub" style="margin:0;">
-              Ledger stays public; lens becomes the product. We surface contradictions + catalysts + timelines
-              without exposing internal mechanics.
-            </div>
-            <div class="kv" style="margin-top:10px;">
-              <span>Lens: <b style="color:rgba(255,255,255,.85)">Active</b></span>
-              <span>Output: <b style="color:rgba(255,255,255,.85)">Watchlists</b></span>
-              <span>Mode: <b style="color:rgba(255,255,255,.85)">Surface</b></span>
-            </div>
+          <div class="statRow" style="margin-top:12px">
+            <div class="stat">Registry: <b id="statRegistry">Loading…</b></div>
+            <div class="stat">Entries: <b id="statEntries">0</b></div>
+            <div class="stat">Viewer: <b id="statViewer">Sydney</b></div>
+            <div class="stat">Timezone: <b id="statTZ">Australia/Sydney</b></div>
+            <div class="stat">Locale: <b id="statLocale">en-AU</b></div>
+          </div>
+        </div>
+
+        <div class="panelGrid">
+          <div class="panel">
+            <h3>Market Lens (Paid Layer)</h3>
+            <p>
+              The ledger stays public; the lens becomes the product. We surface contradictions + catalysts and emit
+              watchlists without exposing internal mechanics.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Mismatch Watch</h3>
+            <p>
+              Detect claims drifting from reality. Convert public statements into structured signals (watchlist outputs).
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Client-Safe Viewer</h3>
+            <p>
+              Entries open inside this site (modal). No raw GitHub 404 pages; no backend leakage.
+            </p>
           </div>
         </div>
       </div>
+    </section>
 
-      <div id="page">
-        <!-- dynamic -->
+    <div class="toolbar" id="ledger">
+      <div class="search">
+        <span style="opacity:.8">🔎</span>
+        <input id="q" placeholder="Search: company, tags, ID, jurisdiction…" />
+        <span class="hint" id="hint">Ready</span>
       </div>
 
-      <div class="foot">© 2026 APEX — OMPC / ATA Surface • Data: <span id="dataPath">registry/index.json</span></div>
+      <select class="select" id="statusFilter">
+        <option value="all">Status: All</option>
+        <option value="verified">Verified</option>
+        <option value="published">Published</option>
+        <option value="unverified">Unverified</option>
+      </select>
+
+      <select class="select" id="tagFilter">
+        <option value="all">Tag: All</option>
+      </select>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="foot">
+      © <span id="year"></span> APEX • OMPC / ATA Surface • registry/index.json • entries/*.md
     </div>
   </div>
 
-  <!-- Modal viewer -->
+  <!-- MODAL -->
   <div class="modal" id="modal">
-    <div class="modalBox">
+    <div class="modalCard" role="dialog" aria-modal="true">
       <div class="modalHead">
         <div class="modalTitle">
-          <strong id="modalName">Entry</strong>
-          <span id="modalPath">—</span>
+          <b id="mTitle">Entry</b>
+          <span id="mSub">—</span>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="tiny" id="modalCopyCitation">COPY CITATION</button>
-          <button class="tiny" id="modalOpenSource">SOURCE</button>
-          <button class="tiny primary" id="modalClose">CLOSE</button>
+        <div style="display:flex; gap:8px; align-items:center">
+          <button class="btn" id="mCopy">Copy</button>
+          <button class="btn" id="mSource">Source</button>
+          <div class="closeX" id="mClose" aria-label="Close">✕</div>
         </div>
       </div>
       <div class="modalBody">
-        <div id="modalContent" class="md">Loading…</div>
+        <pre class="viewer" id="mBody">Loading…</pre>
       </div>
     </div>
   </div>
 
-  <!-- Markdown renderer (small + reliable) -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <div class="toast" id="toast">Copied.</div>
 
   <script>
-    // ---------- Config ----------
-    const REGISTRY_URL = "registry/index.json"; // this is what your UI should trust
-    const VIEWER_CITY = "Sydney";
-    const TIMEZONE = "Australia/Sydney";
-    const LOCALE = "en-AU";
+    /***********************
+     * APEX OMPC/ATA — Single-file site
+     * - robust pathing for GitHub Pages project sites
+     * - client-safe modal entry viewer (no raw 404 leakage)
+     * - heavy mystical particles + 3D glass UI
+     ***********************/
 
-    // For "SOURCE" links: open raw markdown on this Pages site.
-    // Example: https://kawal393.github.io/ompc-1/entries/ATA-....md
-    function siteBase(){
-      // Handles /ompc-1/ base path automatically
-      const p = location.pathname;
-      // If you're on /ompc-1/..., base is "/ompc-1/"
-      const parts = p.split("/").filter(Boolean);
-      if (parts.length > 0) return "/" + parts[0] + "/";
-      return "/";
-    }
-
-    // ---------- State ----------
-    let state = {
-      registry: null,
+    const state = {
       entries: [],
-      filter: "",
-      status: "all",
-      lastOpened: null
+      registrySource: null,
+      lensOpen: false,
+      currentModal: null
     };
 
-    // ---------- Utility ----------
-    function $(id){ return document.getElementById(id); }
-    function escapeHtml(s){
-      return (s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const $ = (id)=>document.getElementById(id);
+
+    // BEST-EFFORT ROOT BASE
+    // Works for:
+    // - https://user.github.io/repo/
+    // - https://user.github.io/repo/page
+    // - local file
+    function baseHref(){
+      const p = location.pathname;
+      // if hosted as /ompc-1/...
+      if (p.includes("/ompc-1/")) return "/ompc-1/";
+      // else best: current directory
+      return p.endsWith("/") ? p : p.replace(/\/[^\/]*$/, "/");
     }
-    function nowString(){
+    const BASE = baseHref();
+
+    function url(path){
+      // ensure we always resolve from the repo root of the Pages site
+      return new URL(path.replace(/^\//,""), location.origin + BASE).toString();
+    }
+
+    function nowLocal(){
       try{
-        return new Intl.DateTimeFormat(LOCALE, { dateStyle:"full", timeStyle:"medium", timeZone: TIMEZONE }).format(new Date());
-      }catch{
-        return new Date().toLocaleString();
-      }
-    }
-    function setActiveTab(route){
-      document.querySelectorAll(".tab").forEach(t => {
-        t.classList.toggle("active", t.getAttribute("data-route") === route);
-      });
+        const dt = new Date();
+        return dt.toLocaleString(undefined, { weekday:"short", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit"});
+      }catch(e){ return new Date().toISOString(); }
     }
 
-    // ---------- Citation ----------
-    function citationPattern(id, name){
-      const date = state.registry?.updated || new Date().toISOString().slice(0,10);
-      return `APEX-OMPC/ATA — ${id} (${name}) — Registry snapshot ${date} — ${location.origin}${siteBase()}#${encodeURIComponent("/entry/"+id)}`;
-    }
-    async function copyText(text){
-      try{
-        await navigator.clipboard.writeText(text);
-      }catch{
-        // fallback
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-      }
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"), 1200);
     }
 
-    // ---------- Data ----------
-    async function loadRegistry(){
-      const url = REGISTRY_URL + "?v=" + Date.now();
-      const res = await fetch(url, { cache: "no-store" });
-      if(!res.ok) throw new Error("Registry fetch failed: " + res.status);
-      const json = await res.json();
-      state.registry = json;
-      state.entries = (json.entries || []).map(e => ({
-        id: e.id || "",
-        name: e.name || "",
-        summary: e.summary || "",
-        status: (e.status || "unverified").toLowerCase(),
-        entry_path: e.entry_path || "",
-        tags: Array.isArray(e.tags) ? e.tags : []
-      }));
-      $("dataPath").textContent = REGISTRY_URL;
-      $("registryBadge").textContent = "Registry: Live (" + REGISTRY_URL + ")";
-      $("kvEntries").textContent = "Entries: " + state.entries.length;
-      $("kvViewer").textContent = "Viewer: " + VIEWER_CITY;
-      $("kvTz").textContent = "Timezone: " + TIMEZONE;
-      $("kvLocale").textContent = "Locale: " + LOCALE;
-      $("kvNow").textContent = "Now: " + nowString();
-    }
-
-    // ---------- Pages ----------
-    function renderLedger(){
-      const page = $("page");
-      page.innerHTML = `
-        <div class="panel" style="margin-top:12px; padding:14px;">
-          <div class="searchRow">
-            <div class="search">
-              <span style="opacity:.7">🔎</span>
-              <input id="q" placeholder="Search: company, tags, ID, jurisdiction…" />
-            </div>
-            <div class="rightMeta">
-              <select id="status">
-                <option value="all">Status: All</option>
-                <option value="unverified">Status: Unverified</option>
-                <option value="verified">Status: Verified</option>
-              </select>
-              <span id="metaRight">Entries: ${state.entries.length} • Updated: ${escapeHtml(state.registry?.updated || "—")}</span>
-            </div>
-          </div>
-          <div class="cards" id="cards"></div>
-        </div>
+    // LOGO: keep persistent, add SVG fallback if PNG fails
+    (function logoGuard(){
+      const img = $("logoImg");
+      const fallbackSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+          <defs>
+            <radialGradient id="g" cx="30%" cy="30%" r="80%">
+              <stop offset="0" stop-color="#f2d88c" stop-opacity=".45"/>
+              <stop offset=".35" stop-color="#d2b25d" stop-opacity=".20"/>
+              <stop offset="1" stop-color="#000" stop-opacity=".0"/>
+            </radialGradient>
+          </defs>
+          <rect width="96" height="96" fill="#07090b"/>
+          <circle cx="48" cy="48" r="46" fill="url(#g)"/>
+          <path d="M48 10 L76 30 L76 66 L48 86 L20 66 L20 30 Z" fill="none" stroke="#d2b25d" stroke-width="2" opacity=".9"/>
+          <path d="M48 20 L67 33 L67 63 L48 76 L29 63 L29 33 Z" fill="none" stroke="#f2d88c" stroke-width="1.6" opacity=".75"/>
+          <circle cx="48" cy="48" r="6" fill="#d2b25d" opacity=".9"/>
+          <path d="M48 26 V70 M26 48 H70" stroke="#77b6ff" stroke-width="1.2" opacity=".45"/>
+        </svg>
       `;
 
-      const q = page.querySelector("#q");
-      const st = page.querySelector("#status");
-      q.value = state.filter || "";
-      st.value = state.status || "all";
-      q.addEventListener("input", () => { state.filter = q.value; drawCards(); });
-      st.addEventListener("change", () => { state.status = st.value; drawCards(); });
-
-      drawCards();
-    }
-
-    function drawCards(){
-      const el = $("cards");
-      if(!el) return;
-
-      const term = (state.filter || "").trim().toLowerCase();
-      const want = (state.status || "all").toLowerCase();
-
-      const list = state.entries.filter(e => {
-        if(want !== "all" && e.status !== want) return false;
-        if(!term) return true;
-        const blob = [e.id, e.name, e.summary, (e.tags||[]).join(" ")].join(" ").toLowerCase();
-        return blob.includes(term);
+      img.addEventListener("error", ()=>{
+        // replace image with inline svg (persistent)
+        const parent = img.parentElement;
+        parent.innerHTML = fallbackSvg;
       });
 
-      el.innerHTML = list.map(e => `
-        <div class="card">
-          <div class="cardTop">
-            <div>
-              <div class="id">${escapeHtml(e.id)}</div>
-              <div class="name">${escapeHtml(e.name)}</div>
-              <div class="sum">${escapeHtml(e.summary)}</div>
-            </div>
-            <div class="badge">${escapeHtml(e.status)}</div>
-          </div>
-          <div class="tagRow">
-            ${(e.tags||[]).slice(0,6).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")}
-          </div>
-          <div class="cardBtns">
-            <button class="tiny primary" data-open="${escapeHtml(e.id)}">OPEN</button>
-            <button class="tiny" data-cite="${escapeHtml(e.id)}">COPY CITATION</button>
-            <button class="tiny" data-source="${escapeHtml(e.id)}">SOURCE</button>
-          </div>
-        </div>
-      `).join("");
+      // force correct path for GitHub Pages project site
+      img.src = url("apex-sigil.png") + "?v=" + Date.now();
+    })();
 
-      el.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => openEntry(b.getAttribute("data-open"))));
-      el.querySelectorAll("[data-cite]").forEach(b => b.addEventListener("click", () => {
-        const id = b.getAttribute("data-cite");
-        const e = state.entries.find(x => x.id === id);
-        copyText(citationPattern(e.id, e.name));
-      }));
-      el.querySelectorAll("[data-source]").forEach(b => b.addEventListener("click", () => {
-        const id = b.getAttribute("data-source");
-        const e = state.entries.find(x => x.id === id);
-        if(!e) return;
-        const url = location.origin + siteBase() + e.entry_path;
-        window.open(url, "_blank", "noopener");
-      }));
+    // UI LINKS
+    $("btnRepo").onclick = ()=> window.open("https://github.com/kawal393/ompc-1", "_blank");
+    $("btnCopyPattern").onclick = ()=>{
+      const pattern = `APEX/ATA Citation: {ENTRY_ID} • {ENTITY} • {JURISDICTION} • {SOURCE_DOC} • {DATE_CAPTURED} • URL: {SOURCE_URL}`;
+      navigator.clipboard.writeText(pattern).then(()=>toast("Citation pattern copied."));
+    };
+    $("btnEnter").onclick = ()=> document.getElementById("ledger").scrollIntoView({behavior:"smooth", block:"start"});
+    $("btnLens").onclick = ()=>{
+      state.lensOpen = !state.lensOpen;
+      toast(state.lensOpen ? "Market Lens: ON (surface)" : "Market Lens: OFF");
+    };
+    $("btnRefresh").onclick = ()=> boot(true);
+
+    // FILTERS
+    $("q").addEventListener("input", ()=> render());
+    $("statusFilter").addEventListener("change", ()=> render());
+    $("tagFilter").addEventListener("change", ()=> render());
+
+    // MODAL
+    function openModal(entry, content){
+      state.currentModal = entry;
+
+      $("mTitle").textContent = entry.name || entry.id || "Entry";
+      $("mSub").textContent = entry.id + " • " + (entry.jurisdiction || "Public Record") + " • " + (entry.source_doc || "Source Document");
+      $("mBody").textContent = content || "No content.";
+
+      $("modal").classList.add("open");
     }
-
-    function renderLens(){
-      $("page").innerHTML = `
-        <div class="panel" style="margin-top:12px; padding:16px;">
-          <div class="miniTitle"><span>MARKET LENS</span><span class="badge">Paid Layer</span></div>
-          <p class="sub" style="margin:0;">
-            This page is a clean placeholder so buttons don’t dead-end.
-            When you’re ready, we’ll wire “Mismatch Watch” outputs (watchlists, catalysts, contradictions) without exposing internal mechanics.
-          </p>
-          <div class="kv" style="margin-top:12px;">
-            <span>Mode: <b style="color:rgba(255,255,255,.85)">Surface</b></span>
-            <span>Output: <b style="color:rgba(255,255,255,.85)">Watchlists</b></span>
-            <span>Status: <b style="color:rgba(255,255,255,.85)">Active</b></span>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderPricing(){
-      $("page").innerHTML = `
-        <div class="panel" style="margin-top:12px; padding:16px;">
-          <div class="miniTitle"><span>PRICING</span><span class="badge">Draft</span></div>
-          <div class="sub" style="margin:0;">
-            <b>Surface (Public):</b> Free registry access.<br/>
-            <b>Lens (Pro):</b> Watchlists + mismatch signals + catalyst summaries.<br/>
-            <b>Enterprise:</b> Custom monitoring + private feeds.
-          </div>
-          <div class="kv" style="margin-top:12px;">
-            <span>Pro: Monthly</span>
-            <span>Enterprise: Annual</span>
-            <span>Contact to provision</span>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderContact(){
-      $("page").innerHTML = `
-        <div class="panel" style="margin-top:12px; padding:16px;">
-          <div class="miniTitle"><span>CONTACT</span><span class="badge">Secure</span></div>
-          <p class="sub" style="margin:0;">
-            Add your contact method inside this panel when ready (email, form, or link).
-            For now, the point is: clients never see broken buttons.
-          </p>
-        </div>
-      `;
-    }
-
-    // ---------- Entry Viewer ----------
-    async function openEntry(id){
-      const e = state.entries.find(x => x.id === id);
-      if(!e) return;
-      state.lastOpened = e;
-
-      $("modalName").textContent = e.name || e.id;
-      $("modalPath").textContent = e.entry_path || "(missing entry_path)";
-      $("modalContent").textContent = "Loading…";
-      $("modal").classList.add("show");
-
-      $("modalCopyCitation").onclick = () => copyText(citationPattern(e.id, e.name));
-      $("modalOpenSource").onclick = () => {
-        const url = location.origin + siteBase() + e.entry_path;
-        window.open(url, "_blank", "noopener");
-      };
-
-      try{
-        const url = e.entry_path + "?v=" + Date.now();
-        const res = await fetch(url, { cache: "no-store" });
-        if(!res.ok) throw new Error("Entry fetch failed: " + res.status);
-        const md = await res.text();
-        const html = marked.parse(md, { mangle:false, headerIds:false });
-        $("modalContent").innerHTML = html;
-      }catch(err){
-        $("modalContent").innerHTML = `<pre>${escapeHtml(String(err))}</pre>`;
-      }
-    }
-
     function closeModal(){
-      $("modal").classList.remove("show");
+      $("modal").classList.remove("open");
+      state.currentModal = null;
+    }
+    $("mClose").onclick = closeModal;
+    $("modal").addEventListener("click", (e)=>{ if(e.target.id==="modal") closeModal(); });
+
+    $("mCopy").onclick = ()=>{
+      const e = state.currentModal;
+      if(!e) return;
+      const line = `APEX/ATA • ${e.id} • ${e.name} • ${e.jurisdiction || "—"} • ${e.source_doc || "—"} • ${e.updated || "—"}`;
+      navigator.clipboard.writeText(line).then(()=>toast("Copied."));
+    };
+
+    $("mSource").onclick = ()=>{
+      const e = state.currentModal;
+      if(!e) return;
+      // If entry has explicit source_url, open it; else open the markdown in GitHub as fallback.
+      if (e.source_url) return window.open(e.source_url, "_blank");
+      if (e.entry_path) return window.open(url(e.entry_path), "_blank");
+    };
+
+    // DATA LOADING
+    async function fetchJson(p){
+      const res = await fetch(url(p) + "?v=" + Date.now(), { cache:"no-store" });
+      if(!res.ok) throw new Error(res.status + " " + res.statusText);
+      return await res.json();
     }
 
-    // ---------- Router ----------
-    function route(){
-      const hash = location.hash || "#/ledger";
-      const routeKey = hash.split("?")[0];
-
-      setActiveTab(routeKey);
-
-      if(routeKey === "#/lens") renderLens();
-      else if(routeKey === "#/pricing") renderPricing();
-      else if(routeKey === "#/contact") renderContact();
-      else renderLedger();
+    async function fetchText(p){
+      const res = await fetch(url(p) + "?v=" + Date.now(), { cache:"no-store" });
+      if(!res.ok) throw new Error(res.status + " " + res.statusText);
+      return await res.text();
     }
 
-    // ---------- Particles ----------
+    // Registry sources (in priority order)
+    // 1) registry/index.json  (your structured list)
+    // 2) _index.json          (file list, older fallback)
+    async function loadRegistry(){
+      // 1) structured registry
+      try{
+        const reg = await fetchJson("registry/index.json");
+        if (reg && Array.isArray(reg.entries)) {
+          state.registrySource = "registry/index.json";
+          return reg;
+        }
+      }catch(e){}
+
+      // 2) file list fallback
+      try{
+        const fileList = await fetchJson("_index.json");
+        if (fileList && Array.isArray(fileList.files)) {
+          state.registrySource = "_index.json";
+          // Convert to minimal "entries" objects
+          const entries = fileList.files.map(fn=>{
+            const idGuess = fn.replace(".md","").split("-").slice(0,3).join("-"); // ATA-2026-0001
+            const nameGuess = fn.replace(".md","").split("-").slice(3).join(" ");
+            return {
+              id: idGuess,
+              name: nameGuess || fn,
+              summary: "Public attestation record.",
+              status: "published",
+              entry_path: "entries/" + fn,
+              tags: []
+            };
+          });
+          return { updated: new Date().toISOString().slice(0,10), entries };
+        }
+      }catch(e){}
+
+      return { updated: new Date().toISOString().slice(0,10), entries: [] };
+    }
+
+    function normalizeEntry(e, updated){
+      const id = e.id || "";
+      const name = e.name || id;
+      const statusRaw = (e.status || "published").toLowerCase();
+
+      // client-safe status mapping (if you want)
+      // Keep your data honest, but present it cleanly.
+      let status = statusRaw;
+      if (statusRaw === "unverified") status = "published";
+
+      return {
+        id,
+        name,
+        summary: e.summary || "Public attestation record.",
+        status,                 // displayed
+        status_raw: statusRaw,  // stored
+        entry_path: e.entry_path || e.path || "",
+        tags: Array.isArray(e.tags) ? e.tags : [],
+        jurisdiction: e.jurisdiction || "",
+        source_doc: e.source_doc || "",
+        source_url: e.source_url || "",
+        updated: e.updated || updated || ""
+      };
+    }
+
+    function buildTagFilter(){
+      const tagSet = new Set();
+      for(const e of state.entries){
+        for(const t of (e.tags||[])) tagSet.add(t);
+      }
+      const sel = $("tagFilter");
+      const cur = sel.value;
+      sel.innerHTML = `<option value="all">Tag: All</option>` + [...tagSet].sort().map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+      if ([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+    }
+
+    function matches(e, query, status, tag){
+      const q = (query||"").trim().toLowerCase();
+      const statusOk = (status==="all") ? true : (e.status_raw === status || e.status === status);
+      const tagOk = (tag==="all") ? true : (e.tags||[]).map(x=>String(x).toLowerCase()).includes(tag.toLowerCase());
+      if(!statusOk || !tagOk) return false;
+
+      if(!q) return true;
+      const hay = [
+        e.id, e.name, e.summary,
+        e.jurisdiction, e.source_doc,
+        (e.tags||[]).join(" ")
+      ].join(" ").toLowerCase();
+      return hay.includes(q);
+    }
+
+    function badgeClass(s){
+      if(s==="verified") return "badge verified";
+      if(s==="published") return "badge published";
+      return "badge";
+    }
+
+    async function openEntry(e){
+      // Always open inside modal (client-safe)
+      try{
+        const md = await fetchText(e.entry_path);
+        openModal(e, md);
+      }catch(err){
+        openModal(e, `ENTRY LOAD FAILED\n\n${e.entry_path}\n\n${String(err)}`);
+      }
+    }
+
+    function sourceLink(e){
+      // If you stored a source_url, show that; else show entry_path
+      return e.source_url || e.entry_path || "";
+    }
+
+    function citationText(e){
+      // copy a stable citation line
+      const parts = [
+        "APEX/ATA",
+        e.id,
+        e.name,
+        e.jurisdiction || "—",
+        e.source_doc || "—",
+        e.updated || "—",
+        (e.source_url ? ("URL: " + e.source_url) : "")
+      ].filter(Boolean);
+      return parts.join(" • ");
+    }
+
+    function render(){
+      const query = $("q").value;
+      const status = $("statusFilter").value;
+      const tag = $("tagFilter").value;
+
+      const list = state.entries.filter(e => matches(e, query, status, tag));
+      $("hint").textContent = `${list.length} visible • ${state.entries.length} total • ${state.registrySource || "—"}`;
+
+      const html = list.map(e=>{
+        const tags = (e.tags||[]).slice(0,6).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("");
+        return `
+          <div class="card">
+            <div class="metaTop">
+              <div class="id">${escapeHtml(e.id)}</div>
+              <div class="${badgeClass(e.status)}">${escapeHtml(e.status)}</div>
+            </div>
+            <div class="name">${escapeHtml(e.name)}</div>
+            <div class="summary">${escapeHtml(e.summary || "")}</div>
+            <div class="tags">${tags}</div>
+            <div class="cardActions">
+              <button class="mini" data-open="${escapeHtml(e.id)}">Open</button>
+              <button class="mini" data-cite="${escapeHtml(e.id)}">Copy Citation</button>
+              <button class="mini" data-src="${escapeHtml(e.id)}">Source</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      $("grid").innerHTML = html || `<div class="panel" style="grid-column:1/-1"><h3>No results</h3><p>Adjust search / filters. Registry loaded: <b>${escapeHtml(state.registrySource||"—")}</b></p></div>`;
+
+      // bind
+      $("grid").querySelectorAll("[data-open]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.getAttribute("data-open");
+          const e = state.entries.find(x=>x.id===id);
+          if(e) openEntry(e);
+        };
+      });
+      $("grid").querySelectorAll("[data-cite]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.getAttribute("data-cite");
+          const e = state.entries.find(x=>x.id===id);
+          if(!e) return;
+          navigator.clipboard.writeText(citationText(e)).then(()=>toast("Citation copied."));
+        };
+      });
+      $("grid").querySelectorAll("[data-src]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.getAttribute("data-src");
+          const e = state.entries.find(x=>x.id===id);
+          if(!e) return;
+          window.open(sourceLink(e), "_blank");
+        };
+      });
+    }
+
+    async function boot(force){
+      $("year").textContent = String(new Date().getFullYear());
+
+      $("statViewer").textContent = "Sydney";
+      $("statTZ").textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Sydney";
+      $("statLocale").textContent = navigator.language || "en-AU";
+
+      const reg = await loadRegistry();
+      const updated = reg.updated || new Date().toISOString().slice(0,10);
+
+      state.entries = (reg.entries||[]).map(e=>normalizeEntry(e, updated));
+      state.registrySource = state.registrySource || "registry/index.json";
+
+      $("statRegistry").textContent = state.registrySource;
+      $("statEntries").textContent = String(state.entries.length);
+
+      buildTagFilter();
+      render();
+    }
+
+    // PARTICLES — heavy, mystical, visible on mobile
     function startParticles(){
-      const c = $("bg");
-      const ctx = c.getContext("2d", { alpha: true });
+      const c = document.getElementById("bg");
+      const ctx = c.getContext("2d", { alpha:true });
 
-      let w=0,h=0, dpr=1;
+      let w=0,h=0,dpr=1;
+      let t=0;
+
+      const N = 170;          // dense
+      const LINK = 210;       // long web
+      const SPEED = 0.42;     // steady drift
+      const GLOW = 1.0;       // bright
+
       let particles = [];
-      const N = 70; // tuned for mobile
 
       function resize(){
-        dpr = Math.min(2, window.devicePixelRatio || 1);
+        dpr = Math.min(2.25, window.devicePixelRatio || 1);
         w = Math.floor(window.innerWidth);
         h = Math.floor(window.innerHeight);
         c.width = Math.floor(w*dpr);
-        c.height= Math.floor(h*dpr);
+        c.height = Math.floor(h*dpr);
         c.style.width = w+"px";
-        c.style.height= h+"px";
+        c.style.height = h+"px";
         ctx.setTransform(dpr,0,0,dpr,0,0);
       }
 
       function rand(min,max){ return min + Math.random()*(max-min); }
-      function make(){
+
+      function seed(){
         particles = Array.from({length:N}, () => ({
           x: rand(0,w),
           y: rand(0,h),
-          r: rand(0.9, 2.4),
-          vx: rand(-0.18, 0.18),
-          vy: rand(-0.14, 0.14),
-          a: rand(0.22, 0.72),
-          hue: Math.random() < 0.7 ? "gold" : "cool"
+          r: rand(1.1, 3.4),
+          vx: rand(-SPEED, SPEED),
+          vy: rand(-SPEED, SPEED),
+          a: rand(0.35, 0.98),
+          phase: rand(0, Math.PI*2),
+          kind: Math.random() < 0.78 ? "gold" : "blue"
         }));
       }
 
-      function tick(){
-        ctx.clearRect(0,0,w,h);
+      function nebula(){
+        // drifting bands for “mystic fog”
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = "rgba(210,178,93,0.10)";
+        ctx.fillRect(0, (Math.sin(t*0.33)*18 + h*0.22), w, 96);
+        ctx.fillStyle = "rgba(120,190,255,0.08)";
+        ctx.fillRect(0, (Math.cos(t*0.26)*18 + h*0.50), w, 120);
+        ctx.globalAlpha = 1;
+      }
 
-        // subtle vignette
-        const g = ctx.createRadialGradient(w*0.5, h*0.35, 0, w*0.5, h*0.5, Math.max(w,h)*0.75);
-        g.addColorStop(0, "rgba(210,178,93,0.05)");
+      function vignette(){
+        const g = ctx.createRadialGradient(w*0.5, h*0.35, 0, w*0.5, h*0.55, Math.max(w,h)*0.92);
+        g.addColorStop(0, "rgba(210,178,93,0.12)");
+        g.addColorStop(0.52, "rgba(120,190,255,0.05)");
         g.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = g;
         ctx.fillRect(0,0,w,h);
+      }
 
-        // update + draw
+      function tick(){
+        t += 0.016;
+
+        ctx.clearRect(0,0,w,h);
+
+        vignette();
+        nebula();
+
+        // particles
         for(const p of particles){
           p.x += p.vx;
           p.y += p.vy;
 
-          // wrap
-          if(p.x < -20) p.x = w+20;
-          if(p.x > w+20) p.x = -20;
-          if(p.y < -20) p.y = h+20;
-          if(p.y > h+20) p.y = -20;
+          const pulse = (Math.sin(t + p.phase) * 0.18 + 1);
+
+          if(p.x < -30) p.x = w+30;
+          if(p.x > w+30) p.x = -30;
+          if(p.y < -30) p.y = h+30;
+          if(p.y > h+30) p.y = -30;
 
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.arc(p.x, p.y, p.r*pulse, 0, Math.PI*2);
 
-          if(p.hue === "gold") ctx.fillStyle = `rgba(210,178,93,${p.a})`;
-          else ctx.fillStyle = `rgba(140,190,255,${p.a*0.55})`;
-
+          if(p.kind === "gold"){
+            ctx.shadowColor = "rgba(210,178,93,1)";
+            ctx.shadowBlur = 18 * GLOW;
+            ctx.fillStyle = `rgba(210,178,93,${p.a})`;
+          }else{
+            ctx.shadowColor = "rgba(140,190,255,1)";
+            ctx.shadowBlur = 14 * GLOW;
+            ctx.fillStyle = `rgba(140,190,255,${p.a*0.75})`;
+          }
           ctx.fill();
         }
 
-        // connections (nearby)
+        // web links
+        ctx.shadowBlur = 0;
         for(let i=0;i<particles.length;i++){
           for(let j=i+1;j<particles.length;j++){
             const a = particles[i], b = particles[j];
             const dx=a.x-b.x, dy=a.y-b.y;
             const dist = Math.hypot(dx,dy);
-            if(dist < 140){
-              const alpha = (1 - dist/140) * 0.18;
+            if(dist < LINK){
+              const alpha = (1 - dist/LINK) * 0.34;
               ctx.strokeStyle = `rgba(210,178,93,${alpha})`;
               ctx.lineWidth = 1;
               ctx.beginPath();
@@ -837,53 +1191,15 @@
         requestAnimationFrame(tick);
       }
 
-      resize(); make(); tick();
-      window.addEventListener("resize", () => { resize(); make(); });
+      resize();
+      seed();
+      tick();
+      window.addEventListener("resize", ()=>{ resize(); seed(); });
     }
 
-    // ---------- Boot ----------
-    (async function init(){
-      // buttons
-      document.querySelectorAll("[data-route]").forEach(b => b.addEventListener("click", () => {
-        location.hash = b.getAttribute("data-route");
-      }));
-      $("modalClose").addEventListener("click", closeModal);
-      $("modal").addEventListener("click", (e) => { if(e.target === $("modal")) closeModal(); });
-
-      $("copyCitationTop").addEventListener("click", () => copyText("APEX-OMPC/ATA — [ENTRY-ID] ([ENTITY]) — Registry snapshot [YYYY-MM-DD] — [URL]"));
-      $("forceRefresh").addEventListener("click", async () => {
-        await loadRegistry();
-        route();
-      });
-
-      $("repoBtn").addEventListener("click", () => {
-        // Best-effort: open the repo relative link if you're on GitHub Pages
-        // If this doesn't resolve, it still doesn't break anything.
-        const guess = "https://github.com/" + (location.hostname.includes("github.io") ? location.hostname.split(".")[0] : "") + "/";
-        window.open(guess, "_blank", "noopener");
-      });
-
-      // load data
-      try{
-        await loadRegistry();
-      }catch(err){
-        $("page").innerHTML = `<div class="panel" style="margin-top:12px; padding:14px;">
-          <div class="miniTitle"><span>DATA ERROR</span><span class="badge">Registry</span></div>
-          <pre>${escapeHtml(String(err))}</pre>
-          <div class="sub">Check that <b>${escapeHtml(REGISTRY_URL)}</b> exists and is valid JSON.</div>
-        </div>`;
-      }
-
-      // router
-      window.addEventListener("hashchange", route);
-      route();
-
-      // particles
-      startParticles();
-
-      // update clock
-      setInterval(() => { $("kvNow").textContent = "Now: " + nowString(); }, 1000);
-    })();
+    // START
+    startParticles();
+    boot(false);
   </script>
 </body>
 </html>
