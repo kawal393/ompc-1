@@ -3,1034 +3,895 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>APEX — OMPC / ATA Surface</title>
   <meta name="color-scheme" content="dark" />
+  <title>APEX — OMPC / ATA Surface</title>
   <style>
     :root{
-      --bg:#07090c;
-      --panel: rgba(10,12,16,.62);
-      --panel2: rgba(10,12,16,.48);
-      --stroke: rgba(255,255,255,.10);
-      --stroke2: rgba(255,255,255,.06);
-      --text:#e9eef6;
-      --muted: rgba(233,238,246,.68);
-      --muted2: rgba(233,238,246,.52);
-      --gold: rgba(255, 200, 92, .95);
-      --gold2: rgba(255, 200, 92, .18);
-      --red: rgba(255,90,120,.95);
-      --green: rgba(80,220,160,.95);
-      --radius: 22px;
-      --shadow: 0 24px 60px rgba(0,0,0,.55);
+      --bg:#05070b;
+      --panel: rgba(12,14,18,.68);
+      --panel2: rgba(12,14,18,.52);
+      --line: rgba(255,255,255,.10);
+      --line2: rgba(255,255,255,.06);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+      --muted2: rgba(255,255,255,.44);
+      --gold: rgba(214,172,87,.95);
+      --gold2: rgba(214,172,87,.55);
+      --shadow: 0 18px 55px rgba(0,0,0,.52);
+      --r: 18px;
+      --r2: 14px;
+      --max: 1120px;
+      --pad: clamp(14px, 4vw, 26px);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background: radial-gradient(1200px 900px at 70% -10%, rgba(255,200,92,.09), transparent 60%),
-                  radial-gradient(900px 700px at 10% 110%, rgba(90,160,255,.07), transparent 60%),
-                  var(--bg);
-      color: var(--text);
+      font-family:var(--font);
+      background: radial-gradient(1200px 700px at 50% -10%, rgba(214,172,87,.12), transparent 55%),
+                  radial-gradient(900px 520px at 5% 30%, rgba(110,180,255,.08), transparent 55%),
+                  radial-gradient(900px 520px at 95% 30%, rgba(255,140,110,.06), transparent 55%),
+                  linear-gradient(180deg, #05070b 0%, #06070a 40%, #05060a 100%);
+      color:var(--text);
       overflow-x:hidden;
     }
 
-    /* ===== BACKGROUND LAYERS (FIXED, ALWAYS BEHIND UI) ===== */
-    .bg{
-      position:fixed; inset:0;
+    /* BACKGROUND LAYERS */
+    #particles{
+      position:fixed;
+      inset:0;
       z-index:0;
       pointer-events:none;
-      overflow:hidden;
-    }
-    #particles{
-      position:absolute; inset:0;
-      width:100%; height:100%;
-      opacity:.55;
-      filter: blur(.0px);
+      opacity:.85;
     }
     .sigil{
-      position:absolute; inset:0;
-      background:
-        radial-gradient(1000px 700px at 50% 58%, rgba(0,0,0,.0), rgba(0,0,0,.62) 62%, rgba(0,0,0,.86) 100%),
-        url("apex-sigil.png") center 62% / min(1080px, 120vw) auto no-repeat;
-      opacity:.22; /* make it visible but not screaming */
+      position:fixed;
+      inset:auto 0 -8% 0;
+      height:min(72vh, 820px);
+      z-index:1;
+      pointer-events:none;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      opacity:.62; /* make it visible */
+      filter: saturate(1.05) contrast(1.08);
       mix-blend-mode: screen;
-      transform: translateZ(0);
+    }
+    .sigil img{
+      width:min(92vw, 920px);
+      height:auto;
+      filter: drop-shadow(0 40px 90px rgba(0,0,0,.65));
+      opacity:.95;
     }
     .vignette{
-      position:absolute; inset:-2px;
-      background: radial-gradient(900px 650px at 50% 40%, rgba(0,0,0,.05), rgba(0,0,0,.75) 70%, rgba(0,0,0,.92) 100%);
-      opacity:1;
+      position:fixed; inset:0;
+      z-index:2;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 520px at 50% 18%, rgba(0,0,0,.02), rgba(0,0,0,.45) 60%, rgba(0,0,0,.72) 100%),
+        linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.62));
     }
 
-    /* ===== CONTENT LAYER (ABOVE BACKGROUND) ===== */
+    /* CONTENT */
     .wrap{
       position:relative;
-      z-index:2;
-      max-width: 1160px;
-      margin: 0 auto;
-      padding: 16px 14px 56px;
+      z-index:10; /* always above particles + sigil */
+      padding: calc(var(--pad) + env(safe-area-inset-top)) var(--pad) calc(var(--pad) + env(safe-area-inset-bottom));
+      display:flex;
+      justify-content:center;
+    }
+    .container{
+      width:100%;
+      max-width:var(--max);
     }
 
     .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
       padding: 10px 12px;
-      border:1px solid var(--stroke2);
-      background: linear-gradient(180deg, rgba(12,14,18,.68), rgba(10,12,16,.40));
+      border: 1px solid var(--line2);
       border-radius: 999px;
-      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      background: rgba(8,10,14,.55);
       backdrop-filter: blur(10px);
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
     }
     .brand{
-      display:flex; align-items:center; gap:10px;
-      min-width: 0;
+      display:flex; align-items:center; gap:10px; min-width:0;
     }
     .brand img{
-      width:26px; height:26px; border-radius:8px;
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+      width:28px; height:28px; border-radius:10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.10);
     }
-    .brand .title{
-      display:flex; flex-direction:column;
-      line-height:1.05;
+    .brand .t{
+      line-height:1.1;
       min-width:0;
     }
-    .brand .title b{
-      font-size: 12px;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+    .brand .t b{
+      font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+      display:block;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
-    .brand .title span{
-      font-size: 11px;
-      color: var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+    .brand .t span{
+      font-size:11px; color:var(--muted);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      display:block;
     }
-    .statuspill{
-      display:flex; align-items:center; gap:10px;
-      font-size:12px;
-      color: var(--muted);
-      white-space:nowrap;
+
+    .chiprow{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid var(--line2);
+      background: rgba(10,12,16,.55);
+      backdrop-filter: blur(10px);
+      font-size:11px;
+      color:var(--muted);
     }
     .dot{
-      width:8px; height:8px; border-radius:999px;
-      background: rgba(80,220,160,.9);
-      box-shadow: 0 0 14px rgba(80,220,160,.65);
-      flex:0 0 auto;
-    }
-    .clock{
-      display:flex; flex-direction:column; align-items:flex-end;
-      line-height:1.15;
-    }
-    .clock .now{ color: rgba(233,238,246,.88); font-weight:600; }
-    .clock .tz{ color: var(--muted2); font-size:11px; }
-
-    .hero{
-      margin-top: 12px;
-      border-radius: var(--radius);
-      border: 1px solid var(--stroke2);
-      background: linear-gradient(180deg, rgba(14,16,22,.66), rgba(9,11,15,.42));
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
-      overflow:hidden;
-    }
-    .heroInner{
-      padding: 18px 16px 14px;
-    }
-    h1{
-      margin: 0;
-      font-size: clamp(28px, 4.2vw, 44px);
-      letter-spacing: -.02em;
-      line-height: 1.02;
-    }
-    .sub{
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-      max-width: 70ch;
-    }
-
-    .actions{
-      display:flex; flex-wrap:wrap;
-      gap: 10px;
-      margin-top: 14px;
+      width:8px; height:8px; border-radius:50%;
+      background:#2fe18a;
+      box-shadow: 0 0 0 3px rgba(47,225,138,.12), 0 0 22px rgba(47,225,138,.35);
     }
     .btn{
-      border-radius: 999px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(12,14,18,.50);
-      color: rgba(233,238,246,.92);
-      font-weight: 650;
-      font-size: 12px;
-      letter-spacing:.03em;
-      text-transform: uppercase;
-      cursor: pointer;
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid rgba(214,172,87,.35);
+      background: linear-gradient(180deg, rgba(214,172,87,.12), rgba(214,172,87,.05));
+      color: rgba(255,255,255,.90);
+      font-size:12px;
+      cursor:pointer;
       user-select:none;
+      text-decoration:none;
       transition: transform .12s ease, border-color .12s ease, background .12s ease;
-      backdrop-filter: blur(10px);
+      white-space:nowrap;
     }
-    .btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.18); background: rgba(12,14,18,.62); }
-    .btn.gold{ background: rgba(255,200,92,.10); border-color: rgba(255,200,92,.28); color: rgba(255,235,200,.95); }
-    .btn.ghost{ background: rgba(12,14,18,.32); border-color: rgba(255,255,255,.08); }
+    .btn:active{ transform: scale(.98); }
+    .btn.ghost{
+      border:1px solid var(--line2);
+      background: rgba(12,14,18,.45);
+      color: var(--muted);
+    }
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 14px;
+    .hero{
+      margin-top:14px;
+      border-radius: calc(var(--r) + 6px);
+      border:1px solid var(--line2);
+      background: radial-gradient(900px 420px at 50% 0%, rgba(214,172,87,.11), transparent 55%),
+                  linear-gradient(180deg, rgba(12,14,18,.72), rgba(12,14,18,.52));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
     }
-    @media (min-width: 900px){
-      .grid{ grid-template-columns: 1.2fr .8fr; }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(600px 280px at 20% 10%, rgba(110,180,255,.08), transparent 60%),
+                  radial-gradient(600px 280px at 80% 10%, rgba(255,140,110,.06), transparent 60%);
+      pointer-events:none;
+    }
+    .heroInner{
+      position:relative;
+      padding: 18px;
+    }
+    h1{
+      margin:0;
+      font-size: clamp(26px, 5.5vw, 42px);
+      letter-spacing:-.02em;
+      line-height:1.05;
+    }
+    .sub{
+      margin-top:8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.45;
+      max-width: 72ch;
+    }
+    .ctaRow{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .stats{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:10px;
+    }
+    .card{
+      grid-column: span 12;
+      padding:12px 12px;
+      border-radius: var(--r2);
+      border:1px solid var(--line2);
+      background: rgba(10,12,16,.40);
+      backdrop-filter: blur(12px);
+    }
+    .card b{ display:block; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color: rgba(255,255,255,.78); }
+    .card .v{ margin-top:6px; font-size:12px; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid var(--line2);
+      background: rgba(12,14,18,.55);
+    }
+    .pill em{ font-style:normal; color: rgba(255,255,255,.85); }
+    .pill small{ color: var(--muted2); }
+
+    @media (min-width: 760px){
+      .card{ grid-column: span 6; }
     }
 
     .panel{
-      border-radius: 18px;
-      border: 1px solid var(--stroke2);
-      background: var(--panel);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 18px 46px rgba(0,0,0,.40);
+      margin-top: 14px;
+      border-radius: calc(var(--r) + 6px);
+      border:1px solid var(--line2);
+      background: linear-gradient(180deg, rgba(12,14,18,.70), rgba(12,14,18,.44));
+      box-shadow: var(--shadow);
       overflow:hidden;
     }
     .panelHead{
-      display:flex; align-items:center; justify-content:space-between;
-      gap: 10px;
       padding: 12px 14px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      background: rgba(10,12,16,.28);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid var(--line2);
     }
-    .panelHead b{
-      font-size: 12px;
-      letter-spacing:.12em;
-      text-transform: uppercase;
-      color: rgba(233,238,246,.86);
+    .panelHead .left{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
     }
-    .panelBody{ padding: 12px 14px; color: var(--muted); font-size: 13px; line-height:1.5; }
-
-    .metaRow{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-      font-size:12px; color: var(--muted);
-    }
-    .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding: 8px 10px;
+    .search{
+      flex: 1 1 240px;
+      min-width: 180px;
+      display:flex;
+      align-items:center;
+      padding:10px 12px;
       border-radius: 999px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(10,12,16,.30);
-      color: rgba(233,238,246,.80);
-    }
-    .chip strong{ color: rgba(233,238,246,.92); font-weight:700; }
-
-    /* ===== LIST AREA ===== */
-    .tabs{
-      display:flex; gap:8px; flex-wrap:wrap;
-      padding: 10px 12px;
-      border-top: 1px solid rgba(255,255,255,.06);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      background: rgba(10,12,16,.20);
-    }
-    .tab{
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(10,12,16,.18);
-      color: rgba(233,238,246,.80);
-      font-size: 12px;
-      font-weight: 650;
-      letter-spacing:.05em;
-      text-transform: uppercase;
-      cursor:pointer;
-      user-select:none;
-    }
-    .tab.active{
-      border-color: rgba(255,200,92,.28);
-      background: rgba(255,200,92,.08);
-      color: rgba(255,235,200,.95);
-    }
-
-    .controls{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-      padding: 12px;
-    }
-    .input, .select{
-      flex:1 1 220px;
-      padding: 11px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(10,12,16,.32);
-      color: rgba(233,238,246,.92);
+      border:1px solid var(--line2);
+      background: rgba(8,10,14,.55);
+      color: rgba(255,255,255,.84);
       outline:none;
     }
-    .select{ flex:0 0 170px; }
-
-    .kpis{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
-      padding: 0 12px 12px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .kpis .right{
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    .select{
+      padding:10px 12px;
+      border-radius: 999px;
+      border:1px solid var(--line2);
+      background: rgba(8,10,14,.55);
+      color: rgba(255,255,255,.84);
+      outline:none;
     }
 
-    .cards{
+    .grid{
+      padding: 12px 14px 16px;
       display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      padding: 0 12px 14px;
-    }
-    @media (min-width: 820px){
-      .cards{ grid-template-columns: 1fr 1fr; }
-    }
-
-    .card{
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: linear-gradient(180deg, rgba(10,12,16,.44), rgba(10,12,16,.26));
-      backdrop-filter: blur(12px);
-      box-shadow: 0 14px 40px rgba(0,0,0,.34);
-      padding: 12px 12px 12px;
-      position:relative;
-      overflow:hidden;
-    }
-    /* allow sigil to shine through */
-    .card::before{
-      content:"";
-      position:absolute; inset:0;
-      background: radial-gradient(520px 260px at 30% 0%, rgba(255,200,92,.10), transparent 55%);
-      opacity:.65;
-      pointer-events:none;
-    }
-    .cardTop{
-      position:relative;
-      display:flex; align-items:flex-start; justify-content:space-between;
+      grid-template-columns: repeat(12, 1fr);
       gap:10px;
     }
-    .cardTop .id{
-      font-size: 12px;
-      letter-spacing:.10em;
-      text-transform: uppercase;
-      color: rgba(255,200,92,.92);
-      margin-bottom: 4px;
-    }
-    .cardTop .name{
-      font-weight: 800;
-      letter-spacing:.01em;
-      font-size: 16px;
-      margin: 0;
-      line-height:1.2;
-    }
-    .cardTop .meta{
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .pill{
+    .entry{
+      grid-column: span 12;
+      padding: 12px;
+      border-radius: var(--r2);
+      border:1px solid var(--line2);
+      background: rgba(10,12,16,.40);
+      backdrop-filter: blur(12px);
       position:relative;
-      display:inline-flex; align-items:center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing:.06em;
-      text-transform: uppercase;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(10,12,16,.25);
-      color: rgba(233,238,246,.78);
-      white-space:nowrap;
-    }
-    .pill.unverified{ border-color: rgba(255,200,92,.30); color: rgba(255,235,200,.92); background: rgba(255,200,92,.08); }
-    .pill.verified{ border-color: rgba(80,220,160,.30); color: rgba(200,255,235,.92); background: rgba(80,220,160,.08); }
-
-    .tags{
-      position:relative;
-      display:flex; gap:6px; flex-wrap:wrap;
-      margin-top: 10px;
-    }
-    .tag{
-      font-size: 11px;
-      padding: 6px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(10,12,16,.18);
-      color: rgba(233,238,246,.72);
-    }
-
-    .summary{
-      position:relative;
-      margin-top: 8px;
-      color: rgba(233,238,246,.74);
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .cardActions{
-      position:relative;
-      display:flex; gap:8px; flex-wrap:wrap;
-      margin-top: 12px;
-    }
-
-    .mini{
-      padding: 9px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(10,12,16,.22);
-      color: rgba(233,238,246,.90);
-      font-size: 11px;
-      font-weight: 850;
-      letter-spacing:.06em;
-      text-transform: uppercase;
-      cursor:pointer;
-    }
-    .mini:hover{ border-color: rgba(255,255,255,.18); background: rgba(10,12,16,.30); }
-    .mini.gold{ border-color: rgba(255,200,92,.25); background: rgba(255,200,92,.08); color: rgba(255,235,200,.95); }
-
-    .footer{
-      margin-top: 18px;
-      color: rgba(233,238,246,.50);
-      font-size: 12px;
-      text-align:center;
-    }
-
-    a{ color: rgba(140,190,255,.95); text-decoration:none; }
-    a:hover{ text-decoration:underline; }
-
-    /* Modal */
-    .modal{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.72);
-      display:none;
-      z-index:50;
-      padding: 18px 12px;
-    }
-    .modal.show{ display:flex; align-items:flex-start; justify-content:center; }
-    .modalCard{
-      width:min(980px, 100%);
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(10,12,16,.76);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 30px 90px rgba(0,0,0,.65);
       overflow:hidden;
     }
-    .modalHead{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px;
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+    .entry:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background: radial-gradient(420px 160px at 30% 0%, rgba(214,172,87,.10), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
     }
-    .modalHead b{ font-size:12px; letter-spacing:.12em; text-transform:uppercase; color: rgba(233,238,246,.86); }
-    .close{
-      padding: 8px 10px;
+    .entry .in{ position:relative; }
+    .entryTop{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    }
+    .id{
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color: rgba(214,172,87,.92);
+    }
+    .name{
+      margin-top:6px;
+      font-size: 18px;
+      letter-spacing:-.01em;
+    }
+    .meta{
+      margin-top:6px;
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(214,172,87,.25);
+      background: rgba(214,172,87,.08);
+      font-size:11px;
+      color: rgba(255,255,255,.78);
+    }
+    .tags{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .tag{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line2);
+      background: rgba(12,14,18,.55);
+      color: var(--muted);
+      font-size:11px;
+    }
+    .actions{
+      margin-top:12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    @media (min-width: 760px){
+      .entry{ grid-column: span 6; }
+    }
+    @media (min-width: 1060px){
+      .entry{ grid-column: span 4; }
+    }
+
+    .footer{
+      margin-top:14px;
+      padding: 12px 2px 0;
+      color: rgba(255,255,255,.42);
+      font-size:11px;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    a{ color: rgba(214,172,87,.90); }
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(10,12,16,.82);
+      border:1px solid var(--line2);
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(10,12,16,.30);
-      color: rgba(233,238,246,.88);
-      cursor:pointer;
-      font-weight:850;
-      letter-spacing:.06em;
-      text-transform: uppercase;
-      font-size: 11px;
+      padding: 10px 14px;
+      z-index: 9999;
+      color: rgba(255,255,255,.88);
+      font-size: 12px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.55);
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
     }
-    .modalBody{
-      padding: 14px;
-      max-height: 70vh;
-      overflow:auto;
-      color: rgba(233,238,246,.82);
-      font-size: 13px;
-      line-height:1.55;
-      white-space: pre-wrap;
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
     }
   </style>
 </head>
-<body>
 
-  <!-- BACKGROUND (particles + sigil) -->
-  <div class="bg" aria-hidden="true">
-    <canvas id="particles"></canvas>
-    <div class="sigil"></div>
-    <div class="vignette"></div>
+<body>
+  <canvas id="particles"></canvas>
+
+  <div class="sigil" aria-hidden="true">
+    <img src="./apex-sigil.png" alt="">
   </div>
+  <div class="vignette" aria-hidden="true"></div>
 
   <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <img src="apex-sigil.png" alt="APEX" />
-        <div class="title">
-          <b>APEX — OMPC / ATA</b>
-          <span>Authority Registry · Claims vs Reality · Market Lens</span>
+    <div class="container">
+      <div class="topbar">
+        <div class="brand">
+          <img src="./apex-sigil.png" alt="APEX" />
+          <div class="t">
+            <b>APEX — OMPC / ATA</b>
+            <span>Authority Registry • Claims vs Reality • Market Lens</span>
+          </div>
+        </div>
+
+        <div class="chiprow">
+          <div class="chip"><span class="dot"></span><span id="liveLabel">LIVE SURFACE</span></div>
+          <div class="chip" id="nowChip">—</div>
+          <a class="btn ghost" id="repoBtn" href="#" target="_blank" rel="noreferrer">REPO</a>
+          <button class="btn" id="copyPatternBtn" type="button">COPY CITATION PATTERN</button>
         </div>
       </div>
-      <div class="statuspill">
-        <span class="dot"></span>
-        <div class="clock">
-          <div class="now" id="clockNow">—</div>
-          <div class="tz" id="clockTz">—</div>
-        </div>
-      </div>
-    </div>
 
-    <div class="hero">
-      <div class="heroInner">
-        <h1>Authority you can cite.<br/>Evidence you can anchor.</h1>
-        <div class="sub">
-          This surface exposes a public registry of records (ATA/OMPC style) and a second layer that turns those records into structured intelligence:
-          contradictions, catalysts, watchlists. Same APEX tone. Clean. Calm. Weapon-grade.
-        </div>
-
-        <div class="actions">
-          <button class="btn gold" id="btnLedger">Enter Ledger</button>
-          <button class="btn" id="btnLens">Open Market Lens</button>
-          <button class="btn ghost" id="btnCopyPattern">Copy citation pattern</button>
-          <button class="btn ghost" id="btnForce">Force refresh</button>
-        </div>
-
-        <div class="grid">
-          <div class="panel">
-            <div class="panelHead">
-              <b>Live Surface</b>
-              <span class="chip"><strong id="modeLabel">Auto-index</strong></span>
-            </div>
-            <div class="panelBody">
-              <div class="metaRow">
-                <span class="chip">Registry: <strong id="registryLabel">Live (auto-index)</strong></span>
-                <span class="chip">Entries: <strong id="entryCount">—</strong></span>
-                <span class="chip">Viewer: <strong id="viewerCity">—</strong></span>
-              </div>
-              <div style="height:10px"></div>
-              <div class="metaRow">
-                <span class="chip">Timezone: <strong id="viewerTz">—</strong></span>
-                <span class="chip">Locale: <strong id="viewerLocale">—</strong></span>
-                <span class="chip">Now: <strong id="viewerNow">—</strong></span>
-              </div>
-            </div>
+      <div class="hero">
+        <div class="heroInner">
+          <h1>Authority you can cite.<br/>Evidence you can anchor.</h1>
+          <div class="sub">
+            Public ledger of records (ATA/OMPC). Second layer becomes the product:
+            watchlists, contradictions, catalysts, timelines. Clean. Calm. Weapon-grade.
           </div>
 
-          <div class="panel">
-            <div class="panelHead">
-              <b>Market Lens</b>
-              <span class="chip"><strong>Mismatch Watch</strong></span>
+          <div class="ctaRow">
+            <button class="btn" id="enterLedgerBtn" type="button">ENTER LEDGER</button>
+            <button class="btn ghost" id="openLensBtn" type="button">OPEN MARKET LENS</button>
+            <button class="btn ghost" id="forceRefreshBtn" type="button">FORCE REFRESH</button>
+          </div>
+
+          <div class="stats">
+            <div class="card">
+              <b>Registry</b>
+              <div class="v">
+                <span class="pill"><em id="regMode">Auto-index</em> <small id="regPath">./entries/_index.json</small></span>
+                <span class="pill"><em id="entryCount">0</em> <small>entries</small></span>
+              </div>
             </div>
-            <div class="panelBody">
-              Paid layer: contradictions + catalysts. The ledger stays public; the lens becomes the product.
-              <div style="height:10px"></div>
-              <div class="metaRow">
-                <span class="chip">Lens: <strong>Active</strong></span>
-                <span class="chip">Output: <strong>Watchlists</strong></span>
+            <div class="card">
+              <b>Viewer</b>
+              <div class="v">
+                <span class="pill"><em id="viewerCity">—</em> <small>city</small></span>
+                <span class="pill"><em id="viewerTZ">—</em> <small>timezone</small></span>
+                <span class="pill"><em id="viewerLocale">—</em> <small>locale</small></span>
               </div>
             </div>
           </div>
         </div>
-
       </div>
 
-      <div class="tabs">
-        <div class="tab active" data-tab="ledger">Ledger</div>
-        <div class="tab" data-tab="lens">Market Lens</div>
-        <div class="tab" data-tab="pricing">Pricing</div>
-        <div class="tab" data-tab="contact">Contact</div>
+      <div class="panel" id="ledgerPanel">
+        <div class="panelHead">
+          <div class="left" style="flex:1;">
+            <input class="search" id="search" placeholder="Search: company, tags, ID, jurisdiction..." />
+            <select class="select" id="statusFilter">
+              <option value="all">Status: All</option>
+              <option value="unverified">Unverified</option>
+              <option value="verified">Verified</option>
+              <option value="tracking">Tracking</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+          <div class="chip" id="metaChip">Entries: 0 • Updated: —</div>
+        </div>
+        <div class="grid" id="grid"></div>
       </div>
 
-      <div class="controls">
-        <input class="input" id="q" placeholder="Search: company, tags, ID, jurisdiction…" />
-        <select class="select" id="status">
-          <option value="all">Status: All</option>
-          <option value="unverified">Unverified</option>
-          <option value="verified">Verified</option>
-        </select>
-      </div>
-
-      <div class="kpis">
-        <div>Entries: <b id="kpiEntries">—</b></div>
-        <div class="right">
-          <div>Indexed: <b id="kpiIndexed">—</b></div>
-          <div>Last scan: <b id="kpiScan">—</b></div>
+      <div class="footer">
+        <div>© <span id="year"></span> APEX • OMPC / ATA Surface</div>
+        <div>
+          Data: <span id="dataHint">—</span>
         </div>
       </div>
-
-      <div class="cards" id="cards"></div>
-    </div>
-
-    <div class="footer">
-      © <span id="year"></span> APEX · OMPC / ATA Surface · <span style="opacity:.65">/entries/*.md (auto-index) · optional /registry/index.json</span>
     </div>
   </div>
 
-  <div class="modal" id="modal">
-    <div class="modalCard">
-      <div class="modalHead">
-        <b id="modalTitle">Entry</b>
-        <button class="close" id="modalClose">Close</button>
-      </div>
-      <div class="modalBody" id="modalBody">Loading…</div>
-    </div>
-  </div>
+  <div class="toast" id="toast"></div>
 
 <script>
-/* =========================================================
-   1) VIEWER CLOCK + TIMEZONE + BEST-EFFORT CITY
-   ========================================================= */
-function guessCityFromTZ(tz){
-  const map = {
-    "Australia/Melbourne":"Melbourne",
-    "Australia/Sydney":"Sydney",
-    "Australia/Brisbane":"Brisbane",
-    "Australia/Perth":"Perth",
-    "Australia/Adelaide":"Adelaide",
-    "Asia/Tokyo":"Tokyo",
-    "Asia/Shanghai":"Shanghai",
-    "Asia/Hong_Kong":"Hong Kong",
-    "Asia/Singapore":"Singapore",
-    "Asia/Seoul":"Seoul",
-    "America/New_York":"New York",
-    "America/Los_Angeles":"Los Angeles",
-    "Europe/London":"London",
-    "Europe/Paris":"Paris"
-  };
-  if(map[tz]) return map[tz];
-  // fallback: last segment of TZ
-  if(!tz) return "Unknown";
-  const last = tz.split("/").pop().replace(/_/g," ");
-  return last || tz;
+/* =========================
+   BASE PATH (fixes your “entries not loading”)
+   Works on:
+   - https://kawal393.github.io/ompc-1/
+   - custom domains
+   ========================= */
+const BASE = new URL('.', window.location.href);
+const url = (p) => new URL(p, BASE).toString();
+
+/* Repo button */
+document.getElementById('repoBtn').href = "https://github.com/kawal393/ompc-1";
+
+/* =========================
+   TIME + CITY (viewer)
+   ========================= */
+const nowChip = document.getElementById('nowChip');
+const viewerTZ = document.getElementById('viewerTZ');
+const viewerLocale = document.getElementById('viewerLocale');
+const viewerCity = document.getElementById('viewerCity');
+
+function prettyCityFromTZ(tz){
+  if (!tz) return "Unknown";
+  const parts = tz.split('/');
+  if (parts.length === 1) return tz;
+  const city = parts[parts.length - 1].replaceAll('_',' ');
+  return city || tz;
 }
 
-function formatNow(){
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown";
-  const locale = navigator.language || "en";
-  const now = new Date();
-  const pretty = new Intl.DateTimeFormat(locale, {
-    weekday:"short", year:"numeric", month:"2-digit", day:"2-digit",
-    hour:"2-digit", minute:"2-digit", second:"2-digit",
-    hour12:false
-  }).format(now);
+function tickClock(){
+  const locale = navigator.language || 'en-AU';
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const d = new Date();
 
-  const tzName = new Intl.DateTimeFormat(locale, { timeZoneName:"short" }).formatToParts(now)
-    .find(p=>p.type==="timeZoneName")?.value || tz;
+  const fmt = new Intl.DateTimeFormat(locale, {
+    weekday:'short', year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', second:'2-digit',
+    hour12:false, timeZone: tz
+  });
 
-  document.getElementById("clockNow").textContent = pretty;
-  document.getElementById("clockTz").textContent = tzName;
+  nowChip.textContent = fmt.format(d) + " • " + tz;
+  viewerTZ.textContent = tz;
+  viewerLocale.textContent = locale;
+  viewerCity.textContent = prettyCityFromTZ(tz);
+}
+setInterval(tickClock, 1000);
+tickClock();
 
-  document.getElementById("viewerTz").textContent = tz;
-  document.getElementById("viewerLocale").textContent = locale;
-  document.getElementById("viewerNow").textContent = pretty;
-  document.getElementById("viewerCity").textContent = guessCityFromTZ(tz);
+document.getElementById('year').textContent = new Date().getFullYear();
 
-  // last scan label is viewer-now (not a fake hardcoded date)
-  document.getElementById("kpiScan").textContent = pretty;
+/* =========================
+   TOAST
+   ========================= */
+const toast = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('show'), 1600);
 }
 
-setInterval(formatNow, 1000);
-formatNow();
-
-/* =========================================================
-   2) PARTICLES (canvas) — BEHIND CONTENT
-   ========================================================= */
-(function particles(){
-  const c = document.getElementById("particles");
-  const ctx = c.getContext("2d", { alpha:true });
-  let w=0,h=0, dpr=1;
-  function resize(){
-    dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    w = c.clientWidth; h = c.clientHeight;
-    c.width = Math.floor(w*dpr);
-    c.height = Math.floor(h*dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-  window.addEventListener("resize", resize, { passive:true });
-  resize();
-
-  const N = 70;
-  const pts = Array.from({length:N}, ()=>({
-    x: Math.random()*w,
-    y: Math.random()*h,
-    vx: (Math.random()-.5)*0.18,
-    vy: (Math.random()-.5)*0.18,
-    r: Math.random()*1.8 + 0.6
-  }));
-
-  function tick(){
-    ctx.clearRect(0,0,w,h);
-
-    // soft star dust
-    for(const p of pts){
-      p.x += p.vx; p.y += p.vy;
-      if(p.x< -30) p.x = w+30;
-      if(p.x> w+30) p.x = -30;
-      if(p.y< -30) p.y = h+30;
-      if(p.y> h+30) p.y = -30;
-
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle = "rgba(255,200,92,0.18)";
-      ctx.fill();
-
-      // tiny glow core
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,Math.max(.6,p.r*.55),0,Math.PI*2);
-      ctx.fillStyle = "rgba(255,255,255,0.12)";
-      ctx.fill();
-    }
-
-    // connecting lines
-    for(let i=0;i<N;i++){
-      for(let j=i+1;j<N;j++){
-        const a = pts[i], b = pts[j];
-        const dx = a.x-b.x, dy = a.y-b.y;
-        const dist = Math.hypot(dx,dy);
-        if(dist < 140){
-          const alpha = (1 - dist/140) * 0.12;
-          ctx.strokeStyle = `rgba(180,210,255,${alpha})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(a.x,a.y);
-          ctx.lineTo(b.x,b.y);
-          ctx.stroke();
-        }
-      }
-    }
-
-    requestAnimationFrame(tick);
-  }
-  tick();
-})();
-
-/* =========================================================
-   3) LEDGER: AUTO-INDEX /entries/*.md
-   ========================================================= */
-const cardsEl = document.getElementById("cards");
-const yearEl = document.getElementById("year");
-yearEl.textContent = new Date().getFullYear();
+/* =========================
+   DATA LOADING (registry/index.json OR entries/_index.json)
+   ========================= */
+const grid = document.getElementById('grid');
+const metaChip = document.getElementById('metaChip');
+const entryCount = document.getElementById('entryCount');
+const regMode = document.getElementById('regMode');
+const regPath = document.getElementById('regPath');
+const dataHint = document.getElementById('dataHint');
 
 let ALL = [];
+let UPDATED = null;
 
-function safeText(s){ return (s ?? "").toString(); }
-
-function parseMD(md){
-  // Extract a few useful fields from your ATA markdown (best-effort)
-  // Works even if formatting varies.
-  const out = {
-    id: "",
-    name: "",
-    type: "Public Company",
-    jurisdiction: "",
-    scope: "",
-    status: "unverified",
-    tags: [],
-    summary: "Public attestation record. Presence-only. Source-anchored.",
-    source_url: "",
-    entry_path: ""
-  };
-
-  // ID + name from heading like: "ATA-2026-0001 — BHP Group Limited"
-  const h = md.match(/^\s*#\s*(ATA-[0-9]{4}-[0-9]{4})\s*[—-]\s*(.+)\s*$/mi);
-  if(h){ out.id = h[1].trim(); out.name = h[2].trim(); }
-
-  // If your files are named like ATA-2026-0001-BHP.md, fallback
-  if(!out.id){
-    const m = md.match(/ATA-[0-9]{4}-[0-9]{4}/);
-    if(m) out.id = m[0];
-  }
-
-  // Jurisdiction line like: "Jurisdiction: Australia"
-  const j = md.match(/Jurisdiction:\s*([^\n]+)/i);
-  if(j) out.jurisdiction = j[1].trim();
-
-  // Entity type line
-  const t = md.match(/Entity Type:\s*([^\n]+)/i);
-  if(t) out.type = t[1].trim();
-
-  // Primary Source URL
-  const u = md.match(/Primary Source URL:\s*(https?:\/\/[^\s)]+)/i);
-  if(u) out.source_url = u[1].trim();
-
-  // Tags from simple patterns
-  if(/AI|compute|semiconductor/i.test(md)) out.tags.push("AI","Compute");
-  if(/mining|industrial/i.test(md)) out.tags.push("Resources","Infrastructure");
-  if(/asset manager|family office|fund/i.test(md)) out.tags.push("Capital");
-  out.tags = [...new Set(out.tags)].slice(0,4);
-
-  if(!out.name) out.name = "Unknown Entity";
-  if(!out.jurisdiction) out.jurisdiction = "—";
-
-  return out;
+async function fetchJSON(path){
+  const res = await fetch(url(path), { cache: "no-store" });
+  if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+  return await res.json();
 }
 
-async function listEntryFiles(){
-  // GitHub Pages can't read directory listings directly.
-  // So we use a tiny convention:
-  // - If /registry/index.json exists, use it.
-  // - Else we try a known file list embedded by you (optional).
-  // - Else we fall back to a hardcoded minimal list (NOT desired).
-  //
-  // YOU are already in auto-index, so you likely have /entries/*.md and the code
-  // that built your current page knows how to enumerate them.
-  //
-  // Here, we implement a robust approach:
-  // 1) Try /registry/index.json
-  // 2) If not present, try /entries/_index.json (you can add later)
-  // 3) If neither, use a built-in list (you can paste your 15 filenames here if needed)
+async function loadData(){
+  grid.innerHTML = "";
+  metaChip.textContent = "Loading…";
+  regMode.textContent = "Auto-index";
+  regPath.textContent = "./entries/_index.json";
+  dataHint.textContent = "Loading…";
 
-  const tryJson = async (path)=>{
-    const r = await fetch(path, { cache:"no-store" });
-    if(!r.ok) return null;
-    return await r.json();
-  };
+  // Prefer registry/index.json (your richer schema)
+  try {
+    const reg = await fetchJSON("registry/index.json");
+    if (reg && Array.isArray(reg.entries) && reg.entries.length){
+      ALL = reg.entries.map(e => ({
+        id: e.id || "",
+        name: e.name || "",
+        type: e.type || "",
+        jurisdiction: e.jurisdiction || "",
+        scope: e.scope || "",
+        status: (e.status || "unverified").toLowerCase(),
+        tags: Array.isArray(e.tags) ? e.tags : [],
+        summary: e.summary || "Public attestation record. Presence-only. Source-anchored.",
+        source_url: e.source_url || "",
+        entry_path: e.entry_path || ""
+      }));
+      UPDATED = reg.updated || null;
+      regMode.textContent = "Registry";
+      regPath.textContent = "./registry/index.json";
+      dataHint.textContent = "registry/index.json";
+      return;
+    }
+  } catch (_) {}
 
-  const reg = await tryJson("./registry/index.json").catch(()=>null);
-  if(reg && Array.isArray(reg.entries) && reg.entries.length){
-    document.getElementById("modeLabel").textContent = "Registry";
-    document.getElementById("registryLabel").textContent = "Live (registry/index.json)";
-    return reg.entries.map(e => e.entry_path?.replace(/^\.\//,"") || "");
+  // Fallback: entries/_index.json (simple file list)
+  // Supports either:
+  // 1) { "files": ["ATA-2026-0001-BHP.md", ...] }
+  // 2) ["ATA-2026-0001-BHP.md", ...]
+  try {
+    const idx = await fetchJSON("entries/_index.json");
+    const files = Array.isArray(idx) ? idx : (Array.isArray(idx.files) ? idx.files : []);
+    if (!files.length) throw new Error("No files in _index.json");
+
+    ALL = files.map((fn) => {
+      const base = fn.replace(/\.md$/i,"");
+      const parts = base.split("-");
+      const id = parts.slice(0,3).join("-"); // ATA-2026-0001
+      const name = parts.slice(3).join(" ").replaceAll("_"," ").trim() || base;
+      return {
+        id,
+        name,
+        type: "Public Record",
+        jurisdiction: "—",
+        scope: "—",
+        status: "unverified",
+        tags: [],
+        summary: "Public attestation record. Presence-only. Source-anchored.",
+        source_url: "",
+        entry_path: `./entries/${fn}`
+      };
+    });
+    UPDATED = null;
+    regMode.textContent = "Auto-index";
+    regPath.textContent = "./entries/_index.json";
+    dataHint.textContent = "entries/_index.json";
+    return;
+  } catch (e) {
+    ALL = [];
+    UPDATED = null;
+    dataHint.textContent = "NO INDEX FOUND";
+    throw e;
   }
-
-  const alt = await tryJson("./entries/_index.json").catch(()=>null);
-  if(alt && Array.isArray(alt.files) && alt.files.length){
-    document.getElementById("modeLabel").textContent = "Auto-index";
-    document.getElementById("registryLabel").textContent = "Live (auto-index)";
-    return alt.files.map(f => ("entries/"+f).replace(/^entries\/entries\//,"entries/"));
-  }
-
-  // LAST RESORT: if you ever see 0 entries, paste your filenames here.
-  // Example: ["ATA-2026-0001-BHP.md", ...]
-  const hardcoded = [];
-  return hardcoded.map(f => "entries/"+f);
 }
 
-async function loadLedger(){
-  cardsEl.innerHTML = "";
-  ALL = [];
+function escapeHTML(s){
+  return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
-  const files = await listEntryFiles();
-  // If empty, show error card
-  if(!files.length){
-    document.getElementById("entryCount").textContent = "0";
-    document.getElementById("kpiEntries").textContent = "0";
-    document.getElementById("kpiIndexed").textContent = "0";
+function badgeLabel(status){
+  const s = (status || "unverified").toLowerCase();
+  if (s === "verified") return "Verified";
+  if (s === "tracking") return "Tracking";
+  if (s === "archived") return "Archived";
+  return "Unverified";
+}
 
-    cardsEl.innerHTML = `
-      <div class="card" style="grid-column:1/-1">
-        <div class="cardTop">
-          <div>
-            <div class="id">NO INDEX FOUND</div>
-            <h3 class="name">Auto-index needs a file list</h3>
-            <div class="meta">Add <b>/entries/_index.json</b> with your 15 filenames, or restore <b>/registry/index.json</b>.</div>
-          </div>
-          <span class="pill unverified">Fix</span>
-        </div>
-        <div class="summary" style="margin-top:10px">
-          Quick fix: create <b>entries/_index.json</b> like:<br><br>
-          <code style="color:rgba(233,238,246,.85)">{"files":["ATA-2026-0001-BHP.md","ATA-2026-0002-MICROSOFT.md", "..."]}</code>
-        </div>
-      </div>
-    `;
+function normalize(s){ return (s||"").toLowerCase().trim(); }
+
+function applyFilters(){
+  const q = normalize(document.getElementById('search').value);
+  const status = document.getElementById('statusFilter').value;
+
+  const filtered = ALL.filter(e => {
+    const hay = normalize([e.id, e.name, e.type, e.jurisdiction, e.scope, e.summary, ...(e.tags||[])].join(" "));
+    const okQ = !q || hay.includes(q);
+    const okS = (status === "all") || normalize(e.status) === status;
+    return okQ && okS;
+  });
+
+  render(filtered);
+}
+
+function render(list){
+  grid.innerHTML = "";
+  entryCount.textContent = String(list.length);
+
+  const updatedText = UPDATED ? UPDATED : "—";
+  metaChip.textContent = `Entries: ${list.length} • Updated: ${updatedText}`;
+
+  if (!list.length){
+    const div = document.createElement('div');
+    div.className = 'entry';
+    div.style.gridColumn = 'span 12';
+    div.innerHTML = `<div class="in">
+      <div class="name">No matches.</div>
+      <div class="meta">Change filters or search again.</div>
+    </div>`;
+    grid.appendChild(div);
     return;
   }
 
-  // Fetch + parse each md
-  const results = [];
-  for(const path of files){
-    if(!path) continue;
-    const r = await fetch(path, { cache:"no-store" });
-    if(!r.ok) continue;
-    const md = await r.text();
-    const item = parseMD(md);
-    item.entry_path = "./" + path.replace(/^\.\//,"");
-    results.push(item);
-  }
+  for (const e of list){
+    const div = document.createElement('div');
+    div.className = 'entry';
 
-  // Sort by ATA id
-  results.sort((a,b)=> safeText(a.id).localeCompare(safeText(b.id)));
+    const tags = (e.tags || []).slice(0,6).map(t => `<span class="tag">${escapeHTML(String(t))}</span>`).join("");
+    const openURL = e.entry_path ? url(e.entry_path.replace(/^\.\//,'')) : "";
+    const sourceURL = e.source_url || "";
 
-  ALL = results;
-  document.getElementById("entryCount").textContent = String(ALL.length);
-  document.getElementById("kpiEntries").textContent = String(ALL.length);
-  document.getElementById("kpiIndexed").textContent = String(ALL.length);
+    // Citation pattern (stable)
+    const citation = `${e.id || "ATA-YYYY-NNNN"} — ${e.name || "Entity"} (APEX OMPC/ATA) • Source: ${sourceURL || "[source-url]"} • Record: ${openURL || "[record-url]"}`;
 
-  render();
-}
-
-function pillClass(status){
-  const s = safeText(status).toLowerCase();
-  if(s === "verified") return "pill verified";
-  return "pill unverified";
-}
-
-function tagHTML(tags){
-  const arr = Array.isArray(tags) ? tags : [];
-  if(!arr.length) return "";
-  return `<div class="tags">${arr.map(t=>`<span class="tag">${safeText(t)}</span>`).join("")}</div>`;
-}
-
-function render(){
-  const query = safeText(document.getElementById("q").value).toLowerCase().trim();
-  const status = document.getElementById("status").value;
-
-  let view = ALL.slice();
-
-  if(status !== "all"){
-    view = view.filter(x => safeText(x.status).toLowerCase() === status);
-  }
-  if(query){
-    view = view.filter(x=>{
-      const blob = [
-        x.id, x.name, x.type, x.jurisdiction, x.scope,
-        (x.tags||[]).join(" "),
-        x.summary
-      ].join(" ").toLowerCase();
-      return blob.includes(query);
-    });
-  }
-
-  cardsEl.innerHTML = view.map(x=>{
-    const meta = `${safeText(x.type)} · ${safeText(x.jurisdiction)} · ${safeText(x.scope||"—")}`;
-    const statusText = (safeText(x.status)||"unverified").toUpperCase();
-    return `
-      <div class="card">
-        <div class="cardTop">
+    div.innerHTML = `
+      <div class="in">
+        <div class="entryTop">
           <div>
-            <div class="id">${safeText(x.id)}</div>
-            <h3 class="name">${safeText(x.name)}</h3>
-            <div class="meta">${meta}</div>
+            <div class="id">${escapeHTML(e.id)}</div>
+            <div class="name">${escapeHTML(e.name)}</div>
+            <div class="meta">
+              <span>${escapeHTML(e.type || "Public Record")}</span>
+              <span>•</span>
+              <span>${escapeHTML(e.jurisdiction || "—")}</span>
+              <span>•</span>
+              <span>${escapeHTML(e.scope || "—")}</span>
+            </div>
           </div>
-          <span class="${pillClass(x.status)}">${statusText}</span>
+          <span class="badge">${badgeLabel(e.status)}</span>
         </div>
 
-        <div class="summary">${safeText(x.summary || "")}</div>
-        ${tagHTML(x.tags)}
+        <div class="meta" style="margin-top:10px;">${escapeHTML(e.summary || "")}</div>
 
-        <div class="cardActions">
-          <button class="mini gold" data-open="${encodeURIComponent(x.entry_path)}" data-title="${encodeURIComponent(x.id + ' — ' + x.name)}">Open</button>
-          <button class="mini" data-lens="${encodeURIComponent(x.id)}">Lens</button>
-          <a class="mini" href="${safeText(x.source_url)||"#"}" target="_blank" rel="noopener">Source</a>
-          <button class="mini" data-cite="${encodeURIComponent(x.id)}">Copy citation</button>
+        <div class="tags">${tags || `<span class="tag">Resources</span><span class="tag">Infrastructure</span>`}</div>
+
+        <div class="actions">
+          <a class="btn" href="${openURL}" target="_blank" rel="noreferrer">OPEN</a>
+          <button class="btn ghost" type="button" data-cite="${escapeHTML(citation)}">COPY CITATION</button>
+          ${sourceURL ? `<a class="btn ghost" href="${escapeHTML(sourceURL)}" target="_blank" rel="noreferrer">SOURCE</a>` : `<span class="btn ghost" style="opacity:.55; pointer-events:none;">SOURCE</span>`}
         </div>
       </div>
     `;
-  }).join("");
+    grid.appendChild(div);
+  }
 
-  // wire buttons
-  cardsEl.querySelectorAll("[data-open]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const path = decodeURIComponent(btn.getAttribute("data-open"));
-      const title = decodeURIComponent(btn.getAttribute("data-title"));
-      openModal(title, path);
+  // Bind copy buttons
+  grid.querySelectorAll('button[data-cite]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const text = btn.getAttribute('data-cite') || '';
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast("Citation copied.");
+      }catch{
+        showToast("Copy failed (browser).");
+      }
     });
   });
-
-  cardsEl.querySelectorAll("[data-cite]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const id = decodeURIComponent(btn.getAttribute("data-cite"));
-      const pattern = `${id} — anchored via Git commit history (public record).`;
-      navigator.clipboard?.writeText(pattern).catch(()=>{});
-      toast(`Copied: ${id}`);
-    });
-  });
-
-  cardsEl.querySelectorAll("[data-lens]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const id = decodeURIComponent(btn.getAttribute("data-lens"));
-      toast(`Market Lens: ${id} (paid layer placeholder)`);
-    });
-  });
-
-  document.getElementById("kpiEntries").textContent = String(view.length);
 }
 
-document.getElementById("q").addEventListener("input", render);
-document.getElementById("status").addEventListener("change", render);
+/* =========================
+   ACTIONS
+   ========================= */
+document.getElementById('search').addEventListener('input', applyFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
 
-document.getElementById("btnForce").addEventListener("click", ()=>{
-  toast("Refreshing…");
-  loadLedger();
-});
-
-document.getElementById("btnCopyPattern").addEventListener("click", ()=>{
-  const txt = `Cite pattern: ATA-YYYY-NNNN — anchored via Git commit history + source URL.`;
-  navigator.clipboard?.writeText(txt).catch(()=>{});
-  toast("Citation pattern copied");
-});
-
-document.getElementById("btnLedger").addEventListener("click", ()=>{
-  window.scrollTo({ top: document.querySelector(".controls").offsetTop - 10, behavior:"smooth" });
-});
-
-document.getElementById("btnLens").addEventListener("click", ()=>{
-  toast("Market Lens: mismatch watch (paid layer placeholder)");
-});
-
-document.querySelectorAll(".tab").forEach(t=>{
-  t.addEventListener("click", ()=>{
-    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-    t.classList.add("active");
-    const name = t.getAttribute("data-tab");
-    if(name === "pricing") toast("Pricing: coming online");
-    if(name === "contact") toast("Contact: coming online");
-    if(name === "lens") toast("Market Lens: mismatch watch");
-  });
-});
-
-/* =========================================================
-   4) MODAL OPEN
-   ========================================================= */
-const modal = document.getElementById("modal");
-const modalTitle = document.getElementById("modalTitle");
-const modalBody = document.getElementById("modalBody");
-document.getElementById("modalClose").addEventListener("click", ()=> modal.classList.remove("show"));
-modal.addEventListener("click", (e)=>{ if(e.target === modal) modal.classList.remove("show"); });
-
-async function openModal(title, path){
-  modalTitle.textContent = title;
-  modalBody.textContent = "Loading…";
-  modal.classList.add("show");
+document.getElementById('copyPatternBtn').addEventListener('click', async ()=>{
+  const pattern = `ATA-YYYY-NNNN — Entity Name (APEX OMPC/ATA) • Source: [source-url] • Record: [record-url]`;
   try{
-    const r = await fetch(path, { cache:"no-store" });
-    const md = await r.text();
-    modalBody.textContent = md;
+    await navigator.clipboard.writeText(pattern);
+    showToast("Citation pattern copied.");
+  }catch{
+    showToast("Copy failed (browser).");
+  }
+});
+
+document.getElementById('forceRefreshBtn').addEventListener('click', async ()=>{
+  try{
+    await boot(true);
+    showToast("Refreshed.");
+  }catch{
+    showToast("Refresh failed.");
+  }
+});
+
+document.getElementById('enterLedgerBtn').addEventListener('click', ()=>{
+  document.getElementById('ledgerPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+});
+
+document.getElementById('openLensBtn').addEventListener('click', ()=>{
+  showToast("Market Lens: coming online.");
+});
+
+/* =========================
+   BOOT
+   ========================= */
+async function boot(isRefresh=false){
+  try{
+    await loadData();
+    UPDATED = UPDATED || (new Date()).toISOString().slice(0,10);
+    applyFilters();
   }catch(e){
-    modalBody.textContent = "Failed to load entry.";
+    metaChip.textContent = "NO INDEX FOUND • Fix entries/_index.json or registry/index.json";
+    entryCount.textContent = "0";
+    grid.innerHTML = `
+      <div class="entry" style="grid-column: span 12;">
+        <div class="in">
+          <div class="name">Auto-index needs data.</div>
+          <div class="meta" style="margin-top:8px;">
+            Put one of these in the repo:
+            <br><br>
+            <b style="color:rgba(255,255,255,.82)">Option A (recommended):</b> <span style="color:rgba(255,255,255,.62)">registry/index.json</span>
+            <br>
+            <b style="color:rgba(255,255,255,.82)">Option B:</b> <span style="color:rgba(255,255,255,.62)">entries/_index.json</span> with a file list
+            <br><br>
+            <span style="color:rgba(255,255,255,.55)">${escapeHTML(String(e.message || e))}</span>
+          </div>
+        </div>
+      </div>
+    `;
   }
 }
+boot();
 
-/* =========================================================
-   5) TOAST
-   ========================================================= */
-let toastTimer = null;
-function toast(msg){
-  let el = document.getElementById("toast");
-  if(!el){
-    el = document.createElement("div");
-    el.id = "toast";
-    el.style.position="fixed";
-    el.style.left="50%";
-    el.style.bottom="16px";
-    el.style.transform="translateX(-50%)";
-    el.style.zIndex="80";
-    el.style.padding="10px 12px";
-    el.style.borderRadius="999px";
-    el.style.border="1px solid rgba(255,255,255,.12)";
-    el.style.background="rgba(10,12,16,.72)";
-    el.style.backdropFilter="blur(12px)";
-    el.style.boxShadow="0 18px 50px rgba(0,0,0,.45)";
-    el.style.color="rgba(233,238,246,.92)";
-    el.style.fontWeight="850";
-    el.style.fontSize="12px";
-    el.style.letterSpacing=".06em";
-    el.style.textTransform="uppercase";
-    document.body.appendChild(el);
+/* =========================
+   PARTICLES (moving background)
+   Always behind content + logo. Never blocks clicks.
+   ========================= */
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let W=0, H=0, DPR=1;
+let P=[];
+const N = 88;
+
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = Math.floor(window.innerWidth);
+  H = Math.floor(window.innerHeight);
+  canvas.width = Math.floor(W * DPR);
+  canvas.height = Math.floor(H * DPR);
+  canvas.style.width = W + "px";
+  canvas.style.height = H + "px";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  if (!P.length){
+    for (let i=0;i<N;i++){
+      P.push({
+        x: Math.random()*W,
+        y: Math.random()*H,
+        vx: (Math.random()-.5)*0.22,
+        vy: (Math.random()-.5)*0.22,
+        r: 1 + Math.random()*1.6,
+        a: .18 + Math.random()*.22
+      });
+    }
   }
-  el.textContent = msg;
-  el.style.opacity="1";
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{ el.style.opacity="0"; }, 1400);
+}
+window.addEventListener('resize', resize, { passive:true });
+resize();
+
+function line(a,b,alpha){
+  ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  ctx.moveTo(a.x,a.y);
+  ctx.lineTo(b.x,b.y);
+  ctx.stroke();
 }
 
-loadLedger();
+function frame(){
+  ctx.clearRect(0,0,W,H);
+
+  // dots
+  for (const p of P){
+    p.x += p.vx; p.y += p.vy;
+    if (p.x< -20) p.x = W+20;
+    if (p.x> W+20) p.x = -20;
+    if (p.y< -20) p.y = H+20;
+    if (p.y> H+20) p.y = -20;
+  }
+
+  // glow field
+  const g = ctx.createRadialGradient(W*0.5,H*0.2, 0, W*0.5,H*0.2, Math.max(W,H));
+  g.addColorStop(0, "rgba(214,172,87,0.06)");
+  g.addColorStop(0.55, "rgba(110,180,255,0.03)");
+  g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+
+  // lines
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(214,172,87,0.18)";
+  for (let i=0;i<P.length;i++){
+    for (let j=i+1;j<P.length;j++){
+      const a = P[i], b = P[j];
+      const dx = a.x-b.x, dy = a.y-b.y;
+      const d2 = dx*dx + dy*dy;
+      if (d2 < 140*140){
+        const d = Math.sqrt(d2);
+        const alpha = (1 - d/140) * 0.22;
+        line(a,b,alpha);
+      }
+    }
+  }
+
+  // dots
+  for (const p of P){
+    ctx.globalAlpha = p.a;
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  requestAnimationFrame(frame);
+}
+frame();
 </script>
 </body>
 </html>
