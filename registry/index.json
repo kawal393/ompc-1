@@ -1,21 +1,20 @@
 {
   "updated": "2026-02-07",
   "entries": [
-    {
-      "id": "ATA-2026-0001",
-      "name": "BHP",
-      "summary": "Public attestation record for BHP.",
-      "status": "unverified",
-      "entry_path": "entries/ATA-2026-0001-BHP.md",
-      "tags": ["mining", "australia"]
-    },
-    {
-      "id": "ATA-2026-0002",
-      "name": "Microsoft",
-      "summary": "Public attestation record for Microsoft.",
-      "status": "unverified",
-      "entry_path": "entries/ATA-2026-0002-MICROSOFT.md",
-      "tags": ["technology"]
-    }
+    { "id": "ATA-2026-0001", "name": "BHP", "summary": "Public attestation record for BHP.", "status": "unverified", "entry_path": "entries/ATA-2026-0001-BHP.md", "tags": ["mining","australia"] },
+    { "id": "ATA-2026-0002", "name": "Microsoft", "summary": "Public attestation record for Microsoft.", "status": "unverified", "entry_path": "entries/ATA-2026-0002-MICROSOFT.md", "tags": ["technology"] },
+    { "id": "ATA-2026-0003", "name": "Alphabet", "summary": "Public attestation record for Alphabet.", "status": "unverified", "entry_path": "entries/ATA-2026-0003-ALPHABET.md", "tags": ["technology"] },
+    { "id": "ATA-2026-0004", "name": "Amazon", "summary": "Public attestation record for Amazon.", "status": "unverified", "entry_path": "entries/ATA-2026-0004-AMAZON.md", "tags": ["technology","commerce"] },
+    { "id": "ATA-2026-0005", "name": "Meta", "summary": "Public attestation record for Meta.", "status": "unverified", "entry_path": "entries/ATA-2026-0005-META.md", "tags": ["technology"] },
+    { "id": "ATA-2026-0006", "name": "Aramco", "summary": "Public attestation record for Aramco.", "status": "unverified", "entry_path": "entries/ATA-2026-0006-ARAMCO.md", "tags": ["energy"] },
+    { "id": "ATA-2026-0007", "name": "Tencent", "summary": "Public attestation record for Tencent.", "status": "unverified", "entry_path": "entries/ATA-2026-0007-TENCENT.md", "tags": ["technology"] },
+    { "id": "ATA-2026-0008", "name": "Reliance", "summary": "Public attestation record for Reliance.", "status": "unverified", "entry_path": "entries/ATA-2026-0008-RELIANCE.md", "tags": ["conglomerate"] },
+    { "id": "ATA-2026-0009", "name": "Samsung", "summary": "Public attestation record for Samsung.", "status": "unverified", "entry_path": "entries/ATA-2026-0009-SAMSUNG.md", "tags": ["technology"] },
+    { "id": "ATA-2026-0010", "name": "BlackRock", "summary": "Public attestation record for BlackRock.", "status": "unverified", "entry_path": "entries/ATA-2026-0010-BLACKROCK.md", "tags": ["finance"] },
+    { "id": "ATA-2026-0011", "name": "Alibaba", "summary": "Public attestation record for Alibaba.", "status": "unverified", "entry_path": "entries/ATA-2026-0011-ALIBABA.md", "tags": ["commerce","technology"] },
+    { "id": "ATA-2026-0012", "name": "Toyota", "summary": "Public attestation record for Toyota.", "status": "unverified", "entry_path": "entries/ATA-2026-0012-TOYOTA.md", "tags": ["automotive"] },
+    { "id": "ATA-2026-0013", "name": "TSMC", "summary": "Public attestation record for TSMC.", "status": "unverified", "entry_path": "entries/ATA-2026-0013-TSMC.md", "tags": ["semiconductors"] },
+    { "id": "ATA-2026-0014", "name": "NVIDIA", "summary": "Public attestation record for NVIDIA.", "status": "unverified", "entry_path": "entries/ATA-2026-0014-NVIDIA.md", "tags": ["semiconductors","ai"] },
+    { "id": "ATA-2026-0015", "name": "Netflix", "summary": "Public attestation record for Netflix.", "status": "unverified", "entry_path": "entries/ATA-2026-0015-NETFLIX.md", "tags": ["media"] }
   ]
 }
