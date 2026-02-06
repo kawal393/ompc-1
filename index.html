@@ -1,0 +1,1540 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>APEX — OMPC / ATA Intelligence Surface</title>
+  <meta name="description" content="Authority you can cite. Evidence you can anchor. Claims vs reality over time." />
+  <meta name="theme-color" content="#0b0f14" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg0:#070a0f;
+      --bg1:#0b0f14;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.10);
+      --stroke2: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.90);
+      --muted: rgba(255,255,255,.62);
+      --muted2: rgba(255,255,255,.42);
+      --gold: #d8b45a;
+      --gold2:#f0d28a;
+      --ok:#39d98a;
+      --warn:#ffcc66;
+      --bad:#ff6b6b;
+      --shadow: 0 18px 50px rgba(0,0,0,.55);
+      --radius: 22px;
+      --radius2: 16px;
+      --max: 1120px;
+      --ring: 0 0 0 1px var(--stroke), 0 0 0 6px rgba(216,180,90,.08);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(216,180,90,.10), transparent 55%),
+                  radial-gradient(900px 700px at 85% 30%, rgba(120,160,255,.08), transparent 60%),
+                  radial-gradient(1100px 900px at 50% 100%, rgba(216,180,90,.08), transparent 60%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* Particle canvas */
+    #tsparticles{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      opacity:.85;
+    }
+
+    /* Logo watermark */
+    .sigil{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      background-image: url("apex-sigil.png");
+      background-repeat:no-repeat;
+      background-position: 50% 65%;
+      background-size: min(82vw, 720px);
+      opacity:.10;
+      filter: saturate(1.05) contrast(1.05);
+      transform: translateZ(0);
+    }
+
+    /* Soft vignette / gradient veil */
+    .veil{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 600px at 50% 30%, rgba(0,0,0,.10), rgba(0,0,0,.55) 65%, rgba(0,0,0,.75) 100%),
+        linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.68));
+      mix-blend-mode: multiply;
+      opacity:.85;
+    }
+
+    /* Layout */
+    .wrap{
+      position:relative;
+      z-index:1;
+      min-height:100%;
+      padding: 18px 16px 48px;
+      padding-bottom: calc(48px + env(safe-area-inset-bottom));
+    }
+
+    .topbar{
+      max-width: var(--max);
+      margin: 0 auto 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 12px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+    .brand-badge{
+      width:34px;height:34px;
+      border-radius: 11px;
+      border: 1px solid var(--stroke);
+      background: rgba(216,180,90,.10);
+      display:grid;place-items:center;
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+    .brand-badge img{width:100%;height:100%;object-fit:cover;opacity:.92}
+    .brand-title{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .brand-title .t1{
+      font-weight:800;
+      letter-spacing:.10em;
+      font-size:12px;
+      opacity:.92;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brand-title .t2{
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      appearance:none;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-weight:700;
+      font-size:12px;
+      letter-spacing:.04em;
+      cursor:pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      text-decoration:none;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    .pill:hover{transform: translateY(-1px); border-color: var(--stroke2); background: rgba(255,255,255,.07)}
+    .pill.gold{
+      border-color: rgba(216,180,90,.45);
+      background: rgba(216,180,90,.12);
+      color: rgba(255,255,255,.92);
+      box-shadow: 0 0 0 6px rgba(216,180,90,.06);
+    }
+    .pill.gold:hover{background: rgba(216,180,90,.16); border-color: rgba(216,180,90,.62)}
+    .pill .dot{
+      width:8px;height:8px;border-radius:99px;background:var(--ok);
+      box-shadow: 0 0 0 4px rgba(57,217,138,.10);
+      flex:0 0 auto;
+    }
+
+    .hero{
+      max-width: var(--max);
+      margin: 16px auto 14px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 14px;
+      align-items:stretch;
+    }
+
+    @media (max-width: 980px){
+      .hero{grid-template-columns: 1fr; }
+      .nav{display:none}
+      .topbar{border-radius: 22px; padding:12px 14px}
+    }
+
+    .card{
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+    }
+
+    .card-pad{padding: 18px 18px;}
+    @media (max-width: 480px){
+      .card-pad{padding: 16px 14px;}
+    }
+
+    .kicker{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color: var(--muted);
+      font-size:12px;
+      letter-spacing:.06em;
+      font-weight:700;
+      text-transform: uppercase;
+      margin-bottom:10px;
+    }
+    .kicker .badge{
+      border:1px solid rgba(216,180,90,.42);
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(216,180,90,.10);
+      color: rgba(255,255,255,.84);
+    }
+
+    h1{
+      margin: 0 0 10px;
+      font-size: clamp(28px, 3.8vw, 50px);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+    }
+    .lead{
+      margin: 0 0 16px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height:1.55;
+      max-width: 64ch;
+    }
+
+    .metaRow{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    @media (max-width: 720px){
+      .metaRow{grid-template-columns: 1fr; }
+    }
+
+    .metaBox{
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      border-radius: 18px;
+      padding: 12px 12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .metaBox .l{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+    }
+    .metaBox .t{font-size:12px;color: var(--muted2); letter-spacing:.08em; text-transform:uppercase; font-weight:800}
+    .metaBox .v{font-size:14px;font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .metaBox .r{font-size:12px;color: var(--muted)}
+    .metaBox .tag{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight:800;
+      font-size:12px;
+      color: rgba(255,255,255,.86);
+      white-space:nowrap;
+    }
+
+    .ctaRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top: 14px;
+    }
+
+    .section{
+      max-width: var(--max);
+      margin: 14px auto 0;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom: 12px;
+    }
+    .tab{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      border-color: rgba(216,180,90,.62);
+      background: rgba(216,180,90,.12);
+      box-shadow: 0 0 0 6px rgba(216,180,90,.06);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr;}
+    }
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 14px;
+      border-bottom: 1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+    }
+    .toolLeft, .toolRight{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .input, select, textarea{
+      width: 100%;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      outline:none;
+      font-weight:650;
+      font-size:13px;
+      transition: box-shadow .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .input:focus, select:focus, textarea:focus{
+      border-color: rgba(216,180,90,.55);
+      box-shadow: var(--ring);
+      background: rgba(255,255,255,.06);
+    }
+    textarea{min-height: 140px; resize: vertical; font-weight:600; line-height:1.45}
+    .mini{
+      width:auto;
+      min-width: 210px;
+      max-width: 360px;
+    }
+    @media (max-width: 520px){
+      .mini{min-width: 100%; max-width: 100%;}
+    }
+
+    .statline{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      color: var(--muted);
+      font-weight:800;
+      font-size:12px;
+      letter-spacing:.04em;
+    }
+    .statline .chip{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: rgba(255,255,255,.82);
+      font-weight:900;
+    }
+
+    .list{
+      padding: 14px 14px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .entry{
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      border-radius: 18px;
+      padding: 12px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      position:relative;
+      overflow:hidden;
+    }
+    .entry:before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(600px 220px at 10% 10%, rgba(216,180,90,.18), transparent 60%);
+      opacity:.55;
+      pointer-events:none;
+    }
+    .entry > *{position:relative}
+
+    .row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .id{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      min-width:0;
+    }
+    .id .pillId{
+      border:1px solid rgba(216,180,90,.55);
+      background: rgba(216,180,90,.10);
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-weight:950;
+      letter-spacing:.06em;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .id .name{
+      font-weight:950;
+      letter-spacing:-.02em;
+      font-size:16px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 52ch;
+    }
+    @media (max-width: 520px){
+      .id .name{max-width: 32ch;}
+    }
+
+    .tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .tag{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight:900;
+      font-size:12px;
+      color: rgba(255,255,255,.82);
+      white-space:nowrap;
+    }
+    .tag.ok{border-color: rgba(57,217,138,.35); background: rgba(57,217,138,.10)}
+    .tag.warn{border-color: rgba(255,204,102,.35); background: rgba(255,204,102,.10)}
+    .tag.bad{border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.10)}
+    .tag.ghost{border-color: rgba(255,255,255,.12); background: rgba(0,0,0,.20)}
+
+    .desc{
+      color: var(--muted);
+      font-size:13px;
+      line-height:1.5;
+      margin-top:-2px;
+    }
+
+    .btnRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-start;
+    }
+
+    .btn{
+      appearance:none;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-weight:950;
+      font-size:12px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      cursor:pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      text-decoration:none;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: var(--stroke2); background: rgba(255,255,255,.07)}
+    .btn.gold{
+      border-color: rgba(216,180,90,.62);
+      background: rgba(216,180,90,.14);
+      box-shadow: 0 0 0 6px rgba(216,180,90,.06);
+    }
+    .btn.gold:hover{background: rgba(216,180,90,.18); border-color: rgba(216,180,90,.78)}
+    .btn.small{padding: 9px 10px; border-radius: 12px; font-size:11px}
+    .btn:active{transform: translateY(0px) scale(.99)}
+
+    .split{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .panel{
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .h2{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing:.06em;
+      text-transform: uppercase;
+      margin:0 0 10px;
+      color: rgba(255,255,255,.90);
+    }
+    .h2 .mark{
+      width:10px;height:10px;border-radius:99px;background: rgba(216,180,90,.95);
+      box-shadow: 0 0 0 6px rgba(216,180,90,.10);
+    }
+
+    .muted{color: var(--muted); font-size:13px; line-height:1.55}
+
+    .footer{
+      max-width: var(--max);
+      margin: 18px auto 0;
+      color: rgba(255,255,255,.45);
+      font-weight:750;
+      font-size:12px;
+      letter-spacing:.04em;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      padding: 10px 4px;
+    }
+
+    .hidden{display:none !important;}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0; z-index:50;
+      display:none;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(10px);
+      padding: 18px;
+      align-items:center;
+      justify-content:center;
+    }
+    .modal.open{display:flex;}
+    .modalCard{
+      width:min(960px, 100%);
+      max-height: min(86vh, 900px);
+      overflow:auto;
+      border:1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(15,18,24,.92), rgba(10,12,16,.92));
+      border-radius: 22px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.65);
+    }
+    .modalHead{
+      position:sticky; top:0;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+    }
+    .modalTitle{
+      font-weight:950; letter-spacing:.02em;
+      font-size:13px;
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .modalBody{padding: 14px;}
+    pre{
+      margin:0;
+      white-space:pre-wrap;
+      word-break:break-word;
+      color: rgba(255,255,255,.86);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .sep{height:1px;background: rgba(255,255,255,.10); margin: 12px 0;}
+  </style>
+</head>
+
+<body>
+  <div id="tsparticles"></div>
+  <div class="sigil"></div>
+  <div class="veil"></div>
+
+  <div class="wrap">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge" title="APEX Sigil">
+          <img src="apex-sigil.png" alt="APEX Sigil">
+        </div>
+        <div class="brand-title">
+          <div class="t1">APEX — OMPC / ATA</div>
+          <div class="t2">Authority Registry • Claims vs Reality • Market Lens</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="pill gold" data-jump="#ledger"><span class="dot"></span>Ledger</button>
+        <button class="pill" data-jump="#lens">Market Lens</button>
+        <button class="pill" data-jump="#pricing">Pricing</button>
+        <button class="pill" data-jump="#contact">Contact</button>
+        <a class="pill" href="#" id="btnPortal">Portal</a>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="card">
+        <div class="card-pad">
+          <div class="kicker">
+            <span class="badge">LIVE SURFACE</span>
+            <span class="mono" id="nowStamp">READY</span>
+          </div>
+
+          <h1>Authority you can cite.<br/>Evidence you can anchor.</h1>
+          <p class="lead">
+            This surface exposes a public registry of records (ATA/OMPC style) and a second layer that turns
+            those records into structured intelligence: contradictions, catalysts, and watchlists.
+            Same APEX tone. Clean. Calm. Weapon-grade.
+          </p>
+
+          <div class="ctaRow">
+            <button class="btn gold" data-jump="#ledger">Enter Ledger</button>
+            <button class="btn" data-jump="#lens">Open Market Lens</button>
+            <button class="btn" id="btnCopyCitation">Copy citation pattern</button>
+          </div>
+
+          <div class="metaRow">
+            <div class="metaBox">
+              <div class="l">
+                <div class="t">Registry</div>
+                <div class="v" id="regStatus">Demo (awaiting index.json)</div>
+                <div class="r">Loads <span class="mono">./registry/index.json</span></div>
+              </div>
+              <div class="tag" id="regTag">SAFE</div>
+            </div>
+            <div class="metaBox">
+              <div class="l">
+                <div class="t">Entries</div>
+                <div class="v" id="regCount">—</div>
+                <div class="r">Searchable cards • Source links</div>
+              </div>
+              <div class="tag">JSON</div>
+            </div>
+            <div class="metaBox">
+              <div class="l">
+                <div class="t">Lens</div>
+                <div class="v">Mismatch Watch</div>
+                <div class="r">Catalysts • Timelines • Notes</div>
+              </div>
+              <div class="tag">APEX</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-pad">
+          <div class="h2"><span class="mark"></span>What this is</div>
+          <p class="muted">
+            A two-business surface:
+            <br><br>
+            <b>1) Public Ledger</b> — clients can open records, cite IDs, and audit sources.
+            <br>
+            <b>2) Market Lens</b> — converts those records into structured watchlists and contradiction tracking
+            (claims vs disclosures vs outcomes over time).
+            <br><br>
+            The Ledger is public. The Lens becomes paid.
+          </p>
+
+          <div class="sep"></div>
+
+          <div class="h2"><span class="mark"></span>Fast deploy</div>
+          <p class="muted">
+            Put <span class="mono">index.html</span> + <span class="mono">apex-sigil.png</span> in the repo root.
+            Optional: add <span class="mono">registry/index.json</span> and <span class="mono">entries/*.md</span>.
+            If missing, the site runs a safe demo without breaking.
+          </p>
+
+          <div class="ctaRow">
+            <a class="btn small" href="#" id="btnRepo">Repo</a>
+            <a class="btn small" href="#ledger">Registry</a>
+            <a class="btn small" href="#lens">Verifier</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="section">
+      <div class="tabs">
+        <div class="tab active" data-tab="ledger">Ledger</div>
+        <div class="tab" data-tab="lens">Market Lens</div>
+        <div class="tab" data-tab="pricing">Pricing</div>
+        <div class="tab" data-tab="contact">Contact</div>
+      </div>
+    </div>
+
+    <!-- LEDGER -->
+    <div class="section" id="ledger" data-pane="ledger">
+      <div class="card">
+        <div class="toolbar">
+          <div class="toolLeft">
+            <input class="input mini" id="q" placeholder="Search: company, tags, ID, jurisdiction…" />
+            <select class="mini" id="statusFilter">
+              <option value="all">Status: All</option>
+              <option value="unverified">Status: Unverified</option>
+              <option value="watch">Status: Watch</option>
+              <option value="verified">Status: Verified</option>
+            </select>
+          </div>
+          <div class="toolRight">
+            <div class="statline">
+              <span class="chip">Entries: <span id="countChip">0</span></span>
+              <span class="chip">Updated: <span id="updatedChip">—</span></span>
+            </div>
+            <button class="btn gold" id="btnReload">Force Refresh</button>
+          </div>
+        </div>
+
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+
+    <!-- MARKET LENS -->
+    <div class="section hidden" id="lens" data-pane="lens">
+      <div class="card">
+        <div class="toolbar">
+          <div class="toolLeft">
+            <select class="mini" id="lensPick">
+              <option value="">Select an entry…</option>
+            </select>
+            <button class="btn" id="btnOpenFromPick">Open</button>
+          </div>
+          <div class="toolRight">
+            <button class="btn gold" id="btnExportLens">Export Brief</button>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="panel">
+            <div class="h2"><span class="mark"></span>Lens Output</div>
+            <div class="muted" id="lensHint">
+              Pick a ledger entry. The Lens generates a structured APEX brief:
+              <b>Claims surface</b> • <b>Contradiction hooks</b> • <b>Catalyst calendar</b> • <b>Watchlist notes</b>.
+            </div>
+            <div class="sep"></div>
+            <div id="lensOut"></div>
+          </div>
+
+          <div class="panel">
+            <div class="h2"><span class="mark"></span>Analyst Notes</div>
+            <p class="muted">
+              This is your internal amplification. Save notes locally. Export when ready.
+            </p>
+            <textarea id="lensNotes" placeholder="Write: catalysts, regulatory exposure, data points, contradictions to monitor…"></textarea>
+            <div class="btnRow" style="margin-top:10px">
+              <button class="btn" id="btnSaveNotes">Save Notes</button>
+              <button class="btn" id="btnClearNotes">Clear</button>
+              <button class="btn gold" id="btnCopyBrief">Copy Brief</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICING -->
+    <div class="section hidden" id="pricing" data-pane="pricing">
+      <div class="grid">
+        <div class="card">
+          <div class="card-pad">
+            <div class="h2"><span class="mark"></span>Public Registry</div>
+            <p class="muted">
+              Open access to records. Citeable IDs. Source pointers. Clean public posture.
+            </p>
+            <div class="sep"></div>
+            <div class="statline">
+              <span class="chip">Tier: Public</span>
+              <span class="chip">Cost: Free</span>
+              <span class="chip">Mode: Read-only</span>
+            </div>
+            <div class="ctaRow">
+              <button class="btn gold" data-jump="#ledger">Enter</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-pad">
+            <div class="h2"><span class="mark"></span>Market Lens Pro</div>
+            <p class="muted">
+              Paid layer: contradiction watchlists, catalyst calendar, exportable briefs, and monitoring packs.
+            </p>
+            <div class="sep"></div>
+            <div class="statline">
+              <span class="chip">Tier: Pro</span>
+              <span class="chip">Delivery: Briefs</span>
+              <span class="chip">Cadence: Weekly</span>
+            </div>
+            <div class="ctaRow">
+              <a class="btn gold" href="#" id="btnBuyPro">Buy Pro</a>
+              <a class="btn" href="#" id="btnSamples">Samples</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-pad">
+            <div class="h2"><span class="mark"></span>Partner Only</div>
+            <p class="muted">
+              Private monitoring + custom watchtower build. Structured outputs. No methodology exposed.
+            </p>
+            <div class="sep"></div>
+            <div class="statline">
+              <span class="chip">Tier: Partner</span>
+              <span class="chip">Scope: Custom</span>
+              <span class="chip">Access: Private</span>
+            </div>
+            <div class="ctaRow">
+              <a class="btn gold" href="#" id="btnPartner">Request Access</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-pad">
+            <div class="h2"><span class="mark"></span>APEX Verdict Brief</div>
+            <p class="muted">
+              One-page verdict. Exactly five elements. Clean decision surface.
+            </p>
+            <div class="sep"></div>
+            <div class="statline">
+              <span class="chip">Format: 1 page</span>
+              <span class="chip">Output: 5 elements</span>
+              <span class="chip">Use: Decision</span>
+            </div>
+            <div class="ctaRow">
+              <a class="btn gold" href="#" id="btnVerdict">Get Verdict</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CONTACT -->
+    <div class="section hidden" id="contact" data-pane="contact">
+      <div class="grid">
+        <div class="card">
+          <div class="card-pad">
+            <div class="h2"><span class="mark"></span>Contact</div>
+            <p class="muted">
+              Put your contact endpoint here (email or form). Keep it simple.
+            </p>
+            <div class="sep"></div>
+            <div class="btnRow">
+              <a class="btn gold" href="#" id="btnEmail">Email</a>
+              <a class="btn" href="#" id="btnLinkedIn">LinkedIn</a>
+              <a class="btn" href="#" id="btnGitHub">GitHub</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-pad">
+            <div class="h2"><span class="mark"></span>Notes</div>
+            <p class="muted">
+              This site is a surface node. The engine is GitHub + append-only discipline.
+              Add entries. Ship updates. Let the archive become gravity.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>© <span id="year"></span> APEX • OMPC / ATA Surface</div>
+      <div class="mono">/registry/index.json • /entries/*.md</div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal" id="modal">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="modalTitle" id="modalTitle">Entry</div>
+        <div class="btnRow">
+          <button class="btn small" id="btnModalCopy">Copy</button>
+          <button class="btn small gold" id="btnModalClose">Close</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <pre id="modalBody"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- tsParticles -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@3/tsparticles.bundle.min.js"></script>
+
+  <script>
+    // ====== Time / basics
+    const pad2 = n => String(n).padStart(2,"0");
+    const now = new Date();
+    const stamp = `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())} ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    document.getElementById("nowStamp").textContent = `READY • ${stamp}`;
+    document.getElementById("year").textContent = String(now.getFullYear());
+
+    // ====== Particles (gold + subtle)
+    (async () => {
+      await tsParticles.load("tsparticles", {
+        fullScreen: { enable: false },
+        background: { color: { value: "transparent" } },
+        fpsLimit: 60,
+        detectRetina: true,
+        particles: {
+          number: { value: 70, density: { enable: true, area: 900 } },
+          color: { value: ["#d8b45a", "#f0d28a", "#ffffff"] },
+          opacity: { value: 0.25, random: { enable: true, minimumValue: 0.08 } },
+          size: { value: { min: 1, max: 2.6 } },
+          links: {
+            enable: true,
+            distance: 140,
+            color: "#d8b45a",
+            opacity: 0.10,
+            width: 1
+          },
+          move: {
+            enable: true,
+            speed: 0.55,
+            direction: "none",
+            outModes: { default: "out" }
+          }
+        },
+        interactivity: {
+          events: {
+            onHover: { enable: true, mode: "repulse" },
+            onClick: { enable: false }
+          },
+          modes: {
+            repulse: { distance: 120, duration: 0.25 }
+          }
+        }
+      });
+    })();
+
+    // ====== Navigation / Tabs
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const panes = Array.from(document.querySelectorAll("[data-pane]"));
+
+    function showPane(key){
+      tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === key));
+      panes.forEach(p => p.classList.toggle("hidden", p.dataset.pane !== key));
+      const target = document.getElementById(key);
+      if(target) target.scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
+    tabs.forEach(t => t.addEventListener("click", () => showPane(t.dataset.tab)));
+    document.querySelectorAll("[data-jump]").forEach(b=>{
+      b.addEventListener("click", (e)=>{
+        e.preventDefault();
+        const sel = b.getAttribute("data-jump");
+        const id = sel.replace("#","");
+        showPane(id === "lens" || id === "pricing" || id === "contact" ? id : "ledger");
+        setTimeout(()=>document.querySelector(sel)?.scrollIntoView({behavior:"smooth", block:"start"}), 120);
+      });
+    });
+
+    // ====== Modal
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const btnModalClose = document.getElementById("btnModalClose");
+    const btnModalCopy = document.getElementById("btnModalCopy");
+
+    btnModalClose.addEventListener("click", ()=> modal.classList.remove("open"));
+    modal.addEventListener("click", (e)=>{ if(e.target === modal) modal.classList.remove("open"); });
+    btnModalCopy.addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(modalBody.textContent);
+        btnModalCopy.textContent = "Copied";
+        setTimeout(()=>btnModalCopy.textContent="Copy", 900);
+      }catch(_){}
+    });
+
+    function openModal(title, body){
+      modalTitle.textContent = title;
+      modalBody.textContent = body;
+      modal.classList.add("open");
+    }
+
+    // ====== Citation pattern
+    const citationPattern = "APEX • OMPC/ATA • ID + source path + commit link (Git history as timestamp).";
+    document.getElementById("btnCopyCitation").addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(citationPattern);
+      }catch(_){}
+    });
+
+    // ====== Link placeholders (set once)
+    // Replace these with your real endpoints when ready.
+    const LINKS = {
+      portal: "#",
+      repo: "#",
+      buyPro: "#",
+      samples: "#",
+      partner: "#",
+      verdict: "#",
+      email: "#",
+      linkedin: "#",
+      github: "#"
+    };
+    document.getElementById("btnPortal").href = LINKS.portal;
+    document.getElementById("btnRepo").href = LINKS.repo;
+    document.getElementById("btnBuyPro").href = LINKS.buyPro;
+    document.getElementById("btnSamples").href = LINKS.samples;
+    document.getElementById("btnPartner").href = LINKS.partner;
+    document.getElementById("btnVerdict").href = LINKS.verdict;
+    document.getElementById("btnEmail").href = LINKS.email;
+    document.getElementById("btnLinkedIn").href = LINKS.linkedin;
+    document.getElementById("btnGitHub").href = LINKS.github;
+
+    // ====== Registry data model
+    // Expected registry/index.json format:
+    // {
+    //   "updated": "2026-02-06",
+    //   "entries": [
+    //     {
+    //       "id":"ATA-2026-0001",
+    //       "name":"BHP Group Limited",
+    //       "type":"Public Company",
+    //       "jurisdiction":"Australia",
+    //       "scope":"Global",
+    //       "status":"unverified|watch|verified",
+    //       "tags":["Resources","Infrastructure"],
+    //       "summary":"One-line summary…",
+    //       "source_url":"https://…",
+    //       "entry_path":"./entries/ATA-2026-0001-BHP.md"
+    //     }
+    //   ]
+    // }
+
+    const DEMO = {
+      updated: stamp.slice(0,10),
+      entries: [
+        {
+          id:"ATA-2026-0001",
+          name:"BHP Group Limited",
+          type:"Public Company",
+          jurisdiction:"Australia",
+          scope:"Global",
+          status:"unverified",
+          tags:["Resources","Infrastructure"],
+          summary:"Public attestation record. Presence only. Source-anchored statements.",
+          source_url:"https://www.bhp.com/investors/annual-report",
+          entry_path:"./entries/ATA-2026-0001-BHP.md"
+        },
+        {
+          id:"ATA-2026-0005",
+          name:"Meta Platforms, Inc.",
+          type:"Public Company",
+          jurisdiction:"United States",
+          scope:"Global",
+          status:"unverified",
+          tags:["AI","Compute","Infrastructure"],
+          summary:"Attestation record. Claim surface + source pointers.",
+          source_url:"https://about.meta.com/",
+          entry_path:"./entries/ATA-2026-0005-META.md"
+        },
+        {
+          id:"ATA-2026-0014",
+          name:"NVIDIA Corporation",
+          type:"Public Company",
+          jurisdiction:"United States",
+          scope:"Global",
+          status:"watch",
+          tags:["Semiconductors","AI","Data Center"],
+          summary:"High-signal infrastructure node. Track disclosures and dependencies.",
+          source_url:"https://investor.nvidia.com/",
+          entry_path:"./entries/ATA-2026-0014-NVIDIA.md"
+        }
+      ]
+    };
+
+    let REG = null;
+    let ALL = [];
+    let ACTIVE = null;
+
+    const els = {
+      list: document.getElementById("list"),
+      q: document.getElementById("q"),
+      statusFilter: document.getElementById("statusFilter"),
+      countChip: document.getElementById("countChip"),
+      updatedChip: document.getElementById("updatedChip"),
+      regStatus: document.getElementById("regStatus"),
+      regCount: document.getElementById("regCount"),
+      regTag: document.getElementById("regTag"),
+      lensPick: document.getElementById("lensPick"),
+      lensOut: document.getElementById("lensOut"),
+      lensNotes: document.getElementById("lensNotes"),
+      lensHint: document.getElementById("lensHint")
+    };
+
+    function statusTag(s){
+      const st = String(s||"unverified").toLowerCase();
+      if(st === "verified") return {label:"Verified", cls:"ok"};
+      if(st === "watch") return {label:"Watch", cls:"warn"};
+      return {label:"Unverified", cls:"ghost"};
+    }
+
+    function normalizeEntry(e){
+      return {
+        id: e.id || e.ata_id || e.ompc_id || "—",
+        name: e.name || e.entity || e.entity_name || "Unknown",
+        type: e.type || e.entity_type || "—",
+        jurisdiction: e.jurisdiction || e.primary_jurisdiction || "—",
+        scope: e.scope || e.operational_scope || "—",
+        status: (e.status || "unverified").toLowerCase(),
+        tags: Array.isArray(e.tags) ? e.tags : [],
+        summary: e.summary || e.description || "",
+        source_url: e.source_url || e.primary_source_url || "",
+        entry_path: e.entry_path || e.path || ""
+      };
+    }
+
+    function setRegistryMeta(isLive, updated, count){
+      els.updatedChip.textContent = updated || "—";
+      els.countChip.textContent = String(count || 0);
+      els.regCount.textContent = String(count || 0);
+
+      if(isLive){
+        els.regStatus.textContent = "Live (registry/index.json)";
+        els.regTag.textContent = "LIVE";
+        els.regTag.style.borderColor = "rgba(57,217,138,.45)";
+        els.regTag.style.background = "rgba(57,217,138,.12)";
+      }else{
+        els.regStatus.textContent = "Demo (awaiting index.json)";
+        els.regTag.textContent = "SAFE";
+        els.regTag.style.borderColor = "rgba(216,180,90,.45)";
+        els.regTag.style.background = "rgba(216,180,90,.12)";
+      }
+    }
+
+    async function fetchText(url){
+      const r = await fetch(url, { cache: "no-store" });
+      if(!r.ok) throw new Error("Fetch failed");
+      return await r.text();
+    }
+
+    async function fetchJSON(url){
+      const r = await fetch(url, { cache: "no-store" });
+      if(!r.ok) throw new Error("Fetch failed");
+      return await r.json();
+    }
+
+    async function loadRegistry(){
+      let live = false;
+      try{
+        REG = await fetchJSON("./registry/index.json");
+        live = true;
+      }catch(_){
+        REG = DEMO;
+        live = false;
+      }
+      ALL = (REG.entries || []).map(normalizeEntry);
+      setRegistryMeta(live, REG.updated || stamp.slice(0,10), ALL.length);
+      render();
+      hydrateLensPick();
+    }
+
+    function matches(entry, q, status){
+      const qq = (q||"").trim().toLowerCase();
+      const st = (status||"all").toLowerCase();
+
+      if(st !== "all" && entry.status !== st) return false;
+      if(!qq) return true;
+
+      const hay = [
+        entry.id, entry.name, entry.type, entry.jurisdiction, entry.scope,
+        (entry.tags||[]).join(" "),
+        entry.summary
+      ].join(" ").toLowerCase();
+
+      return hay.includes(qq);
+    }
+
+    function render(){
+      const q = els.q.value;
+      const st = els.statusFilter.value;
+      const filtered = ALL.filter(e => matches(e, q, st));
+
+      els.countChip.textContent = String(filtered.length);
+
+      els.list.innerHTML = "";
+      if(filtered.length === 0){
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <div class="row">
+            <div class="id">
+              <span class="pillId">NO MATCH</span>
+              <span class="name">No entries found</span>
+            </div>
+            <div class="tags"><span class="tag ghost">Adjust filters</span></div>
+          </div>
+          <div class="desc">Try a broader keyword (e.g. “AI”, “Australia”, “ATA-2026”).</div>
+        `;
+        els.list.appendChild(div);
+        return;
+      }
+
+      filtered.forEach(e=>{
+        const t = statusTag(e.status);
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <div class="row">
+            <div class="id">
+              <span class="pillId">${escapeHtml(e.id)}</span>
+              <span class="name">${escapeHtml(e.name)}</span>
+            </div>
+            <div class="tags">
+              <span class="tag ${t.cls}">${t.label}</span>
+              ${(e.tags||[]).slice(0,3).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join("")}
+              ${(e.tags||[]).length > 3 ? `<span class="tag ghost">+${(e.tags||[]).length - 3}</span>` : ""}
+            </div>
+          </div>
+          <div class="desc">
+            <b>${escapeHtml(e.type)}</b> • ${escapeHtml(e.jurisdiction)} • ${escapeHtml(e.scope)}
+            ${e.summary ? `<br>${escapeHtml(e.summary)}` : ``}
+          </div>
+          <div class="btnRow">
+            <button class="btn gold" data-open="${escapeAttr(e.id)}">Open</button>
+            <button class="btn" data-lens="${escapeAttr(e.id)}">Lens</button>
+            ${e.source_url ? `<a class="btn" href="${escapeAttr(e.source_url)}" target="_blank" rel="noopener">Source</a>` : ``}
+            <button class="btn" data-cite="${escapeAttr(e.id)}">Copy Citation</button>
+          </div>
+        `;
+        els.list.appendChild(div);
+      });
+
+      // Wire buttons
+      els.list.querySelectorAll("[data-open]").forEach(b=>{
+        b.addEventListener("click", ()=> openEntry(b.getAttribute("data-open")));
+      });
+      els.list.querySelectorAll("[data-cite]").forEach(b=>{
+        b.addEventListener("click", ()=> copyCitation(b.getAttribute("data-cite")));
+      });
+      els.list.querySelectorAll("[data-lens]").forEach(b=>{
+        b.addEventListener("click", ()=>{
+          const id = b.getAttribute("data-lens");
+          showPane("lens");
+          selectLens(id);
+        });
+      });
+    }
+
+    function citationFor(id){
+      const e = ALL.find(x => x.id === id);
+      const path = e?.entry_path ? e.entry_path : "./entries/<id>.md";
+      return `APEX • ${id} • ${path} • commit history (GitHub) as canonical timestamp`;
+    }
+
+    async function copyCitation(id){
+      const txt = citationFor(id);
+      try{ await navigator.clipboard.writeText(txt); }catch(_){}
+    }
+
+    async function openEntry(id){
+      const e = ALL.find(x => x.id === id);
+      if(!e) return;
+
+      // Try to load entry markdown if present; else show structured JSON.
+      let body = "";
+      if(e.entry_path){
+        try{
+          body = await fetchText(e.entry_path);
+        }catch(_){
+          body = JSON.stringify(e, null, 2);
+        }
+      }else{
+        body = JSON.stringify(e, null, 2);
+      }
+
+      const title = `${e.id} — ${e.name}`;
+      openModal(title, body);
+    }
+
+    // ====== Lens
+    function hydrateLensPick(){
+      els.lensPick.innerHTML = `<option value="">Select an entry…</option>` +
+        ALL.map(e => `<option value="${escapeAttr(e.id)}">${escapeHtml(e.id)} — ${escapeHtml(e.name)}</option>`).join("");
+    }
+
+    function lensScore(entry){
+      // Simple structural scoring: status + tag weight.
+      // This is not a prediction engine — it’s a prioritization surface.
+      let s = 50;
+      const st = entry.status;
+      if(st === "watch") s += 12;
+      if(st === "unverified") s += 6;
+      if(st === "verified") s -= 8;
+
+      const tags = (entry.tags||[]).map(t=>String(t).toLowerCase());
+      const weight = (kw, n) => tags.some(t=>t.includes(kw)) ? n : 0;
+      s += weight("ai", 8) + weight("compute", 6) + weight("data", 6) + weight("infrastructure", 6);
+      s += weight("pharma", 6) + weight("grid", 6) + weight("regulatory", 8) + weight("resources", 4);
+
+      return Math.max(0, Math.min(100, s));
+    }
+
+    function lensBrief(entry){
+      const score = lensScore(entry);
+      const band = score >= 74 ? {label:"HIGH", cls:"bad"} : score >= 60 ? {label:"MED", cls:"warn"} : {label:"LOW", cls:"ok"};
+
+      const hooks = [
+        "Mismatch between disclosures and operational reality",
+        "Governance / accountability drift",
+        "Dependency concentration (vendors, regulators, supply chain)",
+        "Narrative-to-numbers tension (claims vs filings)",
+      ];
+
+      const catalysts = [
+        "Earnings / guidance event",
+        "Regulatory action / inquiry",
+        "Material contract / supply constraint",
+        "Leadership change / restructuring",
+        "Capital raise / buyback / dilution",
+      ];
+
+      return `
+        <div class="entry">
+          <div class="row">
+            <div class="id">
+              <span class="pillId">${escapeHtml(entry.id)}</span>
+              <span class="name">${escapeHtml(entry.name)}</span>
+            </div>
+            <div class="tags">
+              <span class="tag ${band.cls}">${band.label} PRIORITY</span>
+              <span class="tag">${escapeHtml(entry.jurisdiction)}</span>
+              <span class="tag">${escapeHtml(entry.scope)}</span>
+            </div>
+          </div>
+
+          <div class="desc">
+            <b>Lens Objective:</b> Track contradictions over time — claims surface vs disclosures vs outcomes.
+            <br><b>Registry Anchor:</b> ${escapeHtml(entry.entry_path || "./entries/<id>.md")}
+            ${entry.source_url ? `<br><b>Primary Source:</b> <span class="mono">${escapeHtml(entry.source_url)}</span>` : ``}
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="desc">
+            <b>Contradiction Hooks (watch):</b>
+            <ul style="margin:8px 0 0 18px; color: rgba(255,255,255,.78); line-height:1.55;">
+              ${hooks.map(h=>`<li>${escapeHtml(h)}</li>`).join("")}
+            </ul>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="desc">
+            <b>Catalyst Calendar (generic):</b>
+            <ul style="margin:8px 0 0 18px; color: rgba(255,255,255,.78); line-height:1.55;">
+              ${catalysts.map(c=>`<li>${escapeHtml(c)}</li>`).join("")}
+            </ul>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="btnRow">
+            <button class="btn gold" onclick="window.__copyBrief()">Copy Brief</button>
+            <button class="btn" onclick="window.__copyCitation('${escapeAttr(entry.id)}')">Copy Citation</button>
+            <button class="btn" onclick="window.__openEntry('${escapeAttr(entry.id)}')">Open Ledger Record</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectLens(id){
+      const entry = ALL.find(x => x.id === id);
+      if(!entry) return;
+      ACTIVE = entry;
+
+      els.lensPick.value = id;
+      els.lensOut.innerHTML = lensBrief(entry);
+      els.lensHint.classList.add("hidden");
+
+      // Load saved notes for this entry (local)
+      const key = `apex_lens_notes_${id}`;
+      els.lensNotes.value = localStorage.getItem(key) || "";
+
+      // Expose helpers for inline buttons
+      window.__copyCitation = (x) => copyCitation(x);
+      window.__openEntry = (x) => openEntry(x);
+      window.__copyBrief = () => copyBrief();
+    }
+
+    function currentBriefText(){
+      if(!ACTIVE) return "";
+      const notes = (els.lensNotes.value || "").trim();
+      const cite = citationFor(ACTIVE.id);
+      const score = lensScore(ACTIVE);
+      return [
+        `APEX LENS BRIEF — ${ACTIVE.id} — ${ACTIVE.name}`,
+        ``,
+        `Jurisdiction: ${ACTIVE.jurisdiction} • Scope: ${ACTIVE.scope} • Status: ${ACTIVE.status}`,
+        `Priority Score: ${score}/100`,
+        ``,
+        `Summary: ${ACTIVE.summary || "—"}`,
+        ``,
+        `Registry Anchor: ${ACTIVE.entry_path || "./entries/<id>.md"}`,
+        ACTIVE.source_url ? `Primary Source: ${ACTIVE.source_url}` : ``,
+        ``,
+        `Citation: ${cite}`,
+        ``,
+        notes ? `Notes:\n${notes}` : `Notes: —`
+      ].filter(Boolean).join("\n");
+    }
+
+    async function copyBrief(){
+      const txt = currentBriefText();
+      if(!txt) return;
+      try{ await navigator.clipboard.writeText(txt); }catch(_){}
+    }
+
+    document.getElementById("btnOpenFromPick").addEventListener("click", ()=>{
+      const id = els.lensPick.value;
+      if(!id) return;
+      selectLens(id);
+    });
+
+    document.getElementById("btnExportLens").addEventListener("click", ()=>{
+      const txt = currentBriefText();
+      if(!txt) return;
+      const blob = new Blob([txt], {type:"text/plain;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${ACTIVE?.id || "APEX-LENS"}-brief.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("btnCopyBrief").addEventListener("click", copyBrief);
+
+    document.getElementById("btnSaveNotes").addEventListener("click", ()=>{
+      if(!ACTIVE) return;
+      const key = `apex_lens_notes_${ACTIVE.id}`;
+      localStorage.setItem(key, els.lensNotes.value || "");
+    });
+
+    document.getElementById("btnClearNotes").addEventListener("click", ()=>{
+      els.lensNotes.value = "";
+    });
+
+    // ====== Inputs / Reload
+    els.q.addEventListener("input", render);
+    els.statusFilter.addEventListener("change", render);
+
+    document.getElementById("btnReload").addEventListener("click", async ()=>{
+      document.getElementById("btnReload").textContent = "Loading…";
+      await loadRegistry();
+      document.getElementById("btnReload").textContent = "Force Refresh";
+    });
+
+    // ====== Escaping helpers
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function escapeAttr(s){ return escapeHtml(s).replaceAll("\n"," "); }
+
+    // ====== Boot
+    loadRegistry();
+  </script>
+</body>
+</html>
