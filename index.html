@@ -1,245 +1,863 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>APEX — OMPC / ATA</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>APEX — OMPC / ATA Surface</title>
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{
+      --bg:#06070a;
+      --panel: rgba(10,12,16,.58);
+      --panel2: rgba(10,12,16,.72);
+      --stroke: rgba(255,255,255,.10);
+      --stroke2: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+      --muted2: rgba(255,255,255,.45);
+      --gold: rgba(220,180,90,.95);
+      --gold2: rgba(220,180,90,.35);
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius: 18px;
+      --radius2: 14px;
+    }
 
-<style>
-:root{
-  --bg:#050607;
-  --panel:#0b0e11;
-  --gold:#c9a24d;
-  --muted:#9aa0a6;
-  --text:#eaecef;
-}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1100px 600px at 25% 10%, rgba(220,180,90,.12), transparent 55%),
+                  radial-gradient(900px 600px at 85% 25%, rgba(90,160,255,.10), transparent 60%),
+                  radial-gradient(1200px 800px at 50% 120%, rgba(255,255,255,.06), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      overflow-x:hidden;
+    }
 
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto;
-  background:radial-gradient(circle at 50% 20%, #111 0%, var(--bg) 60%);
-  color:var(--text);
-  overflow-x:hidden;
-}
+    /* --- Background layers (fixed, behind everything) --- */
+    .bg-wrap{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+    }
+    canvas#particles{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      opacity:.55;
+      filter: drop-shadow(0 0 12px rgba(220,180,90,.08));
+    }
+    .sigil{
+      position:absolute;
+      left:50%;
+      top:54%;
+      transform:translate(-50%,-50%);
+      width:min(780px, 120vw);
+      opacity:.18;
+      filter: saturate(1.1) contrast(1.05);
+      mix-blend-mode: screen;
+    }
+    .vignette{
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(1200px 800px at 50% 55%, rgba(0,0,0,.08), rgba(0,0,0,.70) 70%, rgba(0,0,0,.88) 100%);
+      opacity:.95;
+    }
 
-/* PARTICLES */
-canvas{
-  position:fixed;
-  inset:0;
-  z-index:0;
-  pointer-events:none;
-}
+    /* --- App container (above background) --- */
+    .app{
+      position:relative;
+      z-index:2;
+      min-height:100%;
+      padding: 18px 14px 44px;
+    }
 
-/* HEADER */
-header{
-  position:relative;
-  z-index:2;
-  display:flex;
-  align-items:center;
-  gap:14px;
-  padding:18px 22px;
-  border-bottom:1px solid #1a1f25;
-  background:linear-gradient(180deg,rgba(5,6,7,.9),rgba(5,6,7,.6));
-}
-header img{
-  width:42px;
-  height:42px;
-}
-header h1{
-  font-size:18px;
-  letter-spacing:.6px;
-  margin:0;
-}
-header span{
-  color:var(--gold);
-}
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      max-width:1100px;
+      margin:0 auto 14px;
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      border-radius: 999px;
+      background: rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+    .brand{
+      display:flex;align-items:center;gap:10px;min-width:0;
+    }
+    .brand img{
+      width:26px;height:26px;border-radius:10px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.35);
+    }
+    .brand .t{
+      line-height:1.05;
+      min-width:0;
+    }
+    .brand .t b{display:block;font-size:12px;letter-spacing:.18em;color:rgba(255,255,255,.86)}
+    .brand .t span{display:block;font-size:11px;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* HERO */
-.hero{
-  position:relative;
-  z-index:2;
-  padding:40px 22px 20px;
-}
-.hero h2{
-  font-size:28px;
-  margin:0 0 8px;
-}
-.hero p{
-  color:var(--muted);
-  max-width:720px;
-}
+    .pill{
+      display:flex;align-items:center;gap:8px;
+      padding:7px 10px;
+      border:1px solid var(--stroke);
+      border-radius:999px;
+      background: rgba(0,0,0,.35);
+      color: rgba(255,255,255,.82);
+      font-size:11px;
+      white-space:nowrap;
+    }
+    .dot{width:8px;height:8px;border-radius:99px;background: #22c55e;box-shadow:0 0 18px rgba(34,197,94,.35)}
+    .btn{
+      appearance:none;border:1px solid var(--stroke);
+      background: rgba(0,0,0,.35);
+      color: rgba(255,255,255,.86);
+      padding:8px 10px;border-radius:999px;
+      font-size:11px;
+      cursor:pointer;
+      transition: transform .08s ease, border-color .15s ease, background .15s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{border-color: var(--stroke2); background: rgba(0,0,0,.45)}
+    .btn:active{transform: scale(.98)}
+    .btn.gold{border-color: rgba(220,180,90,.35); background: rgba(220,180,90,.10)}
+    .btn.gold:hover{border-color: rgba(220,180,90,.55); background: rgba(220,180,90,.14)}
 
-/* GRID */
-main{
-  position:relative;
-  z-index:2;
-  padding:20px 22px 80px;
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-  gap:16px;
-}
-.card{
-  background:linear-gradient(180deg,#0e1217,#0a0d11);
-  border:1px solid #1b222b;
-  border-radius:14px;
-  padding:16px;
-  transition:.25s;
-}
-.card:hover{
-  border-color:var(--gold);
-  transform:translateY(-2px);
-}
-.card h3{
-  margin:0 0 6px;
-  font-size:17px;
-}
-.badge{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:999px;
-  font-size:11px;
-  background:#151a20;
-  color:var(--gold);
-  margin-right:6px;
-}
-.actions{
-  margin-top:12px;
-}
-button{
-  background:#11161c;
-  color:var(--text);
-  border:1px solid #1f2630;
-  border-radius:8px;
-  padding:6px 10px;
-  cursor:pointer;
-}
-button:hover{
-  border-color:var(--gold);
-}
+    .hero{
+      max-width:1100px;
+      margin:0 auto;
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(12,14,18,.75), rgba(12,14,18,.45));
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      padding: 18px 16px;
+    }
+    .hero h1{
+      margin:0 0 8px;
+      font-size: clamp(26px, 4vw, 40px);
+      letter-spacing:-.02em;
+    }
+    .hero p{
+      margin:0 0 12px;
+      color: var(--muted);
+      line-height:1.55;
+      max-width: 70ch;
+      font-size:13px;
+    }
+    .cta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
+    }
+    .panel{
+      border:1px solid var(--stroke);
+      border-radius: var(--radius2);
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      padding:12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+    }
+    .panel h3{
+      margin:0 0 8px;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color: rgba(255,255,255,.75);
+    }
+    .kv{
+      display:flex;flex-wrap:wrap;gap:8px;
+      margin-top:8px;
+    }
+    .kv .pill{background: rgba(0,0,0,.28)}
+    .split{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between
+    }
 
-/* MODAL */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;
-  z-index:5;
-}
-.modal.open{display:block}
-.modal-content{
-  background:#07090c;
-  max-width:900px;
-  margin:40px auto;
-  padding:22px;
-  border-radius:16px;
-  border:1px solid #1f2630;
-  max-height:80vh;
-  overflow:auto;
-}
-.modal pre{
-  white-space:pre-wrap;
-  color:#dcdcdc;
-  line-height:1.45;
-}
-.close{
-  float:right;
-  cursor:pointer;
-  color:var(--gold);
-}
-</style>
+    .controls{
+      max-width:1100px;margin:12px auto 0;
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+      padding: 10px 2px;
+    }
+    .search{
+      flex:1;
+      min-width: 240px;
+      display:flex;gap:10px;align-items:center;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.40);
+      color: rgba(255,255,255,.90);
+      outline:none;
+    }
+    select{
+      padding:10px 12px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.40);
+      color: rgba(255,255,255,.86);
+      outline:none;
+      font-size:12px;
+    }
+    .meta{
+      color: var(--muted2);
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    .cards{
+      max-width:1100px;margin:10px auto 0;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:12px;
+    }
+    @media (max-width: 900px){ .cards{grid-template-columns:1fr} }
+    .card{
+      border:1px solid var(--stroke);
+      border-radius: var(--radius2);
+      background: rgba(10,12,16,.56);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 45px rgba(0,0,0,.40);
+      padding: 12px;
+      overflow:hidden;
+      position:relative;
+    }
+    .card:before{
+      content:"";
+      position:absolute;inset:-2px;
+      background: radial-gradient(600px 220px at 20% 10%, rgba(220,180,90,.10), transparent 45%),
+                  radial-gradient(600px 220px at 90% 40%, rgba(90,160,255,.08), transparent 55%);
+      pointer-events:none;
+      opacity:.8;
+    }
+    .card > *{position:relative; z-index:2}
+    .cardTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .id{font-size:11px;color:rgba(220,180,90,.85);letter-spacing:.14em;text-transform:uppercase}
+    .name{font-size:16px;margin:4px 0 6px;letter-spacing:-.01em}
+    .summary{font-size:12px;color:var(--muted);line-height:1.45;min-height: 2.6em}
+    .tagrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .tag{
+      font-size:11px;
+      color: rgba(255,255,255,.76);
+      border:1px solid rgba(255,255,255,.12);
+      padding:4px 8px;border-radius:999px;
+      background: rgba(0,0,0,.30);
+    }
+    .status{
+      font-size:11px;
+      color: rgba(220,180,90,.95);
+      border:1px solid rgba(220,180,90,.28);
+      background: rgba(220,180,90,.08);
+      padding:6px 10px;border-radius:999px;
+      white-space:nowrap;
+    }
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .actions .btn{padding:8px 10px}
+
+    /* Modal */
+    .modalBack{
+      position:fixed;inset:0;
+      background: rgba(0,0,0,.68);
+      display:none;
+      align-items:center;justify-content:center;
+      z-index: 50;
+      padding: 14px;
+    }
+    .modal{
+      width:min(980px, 96vw);
+      max-height: 86vh;
+      overflow:auto;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(10,12,16,.88);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 90px rgba(0,0,0,.75);
+    }
+    .modalHead{
+      position:sticky;top:0;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:12px 12px;
+      background: rgba(10,12,16,.92);
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .modalTitle{font-size:13px;color:rgba(255,255,255,.86);letter-spacing:.12em;text-transform:uppercase}
+    .modalBody{padding:14px 14px 18px}
+    .md{
+      font-size:13px;
+      line-height:1.65;
+      color: rgba(255,255,255,.88);
+    }
+    .md h1,.md h2,.md h3{letter-spacing:-.01em}
+    .md a{color: rgba(220,180,90,.95)}
+    .md code{background: rgba(0,0,0,.35); padding: 1px 6px; border-radius: 8px; border:1px solid rgba(255,255,255,.08)}
+    .md pre{background: rgba(0,0,0,.40); padding: 12px; border-radius: 14px; overflow:auto; border:1px solid rgba(255,255,255,.10)}
+    .md blockquote{margin:12px 0;padding:10px 12px;border-left:3px solid rgba(220,180,90,.55);background: rgba(220,180,90,.06);border-radius: 12px}
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 60;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.65);
+      color: rgba(255,255,255,.86);
+      font-size: 12px;
+      display:none;
+      box-shadow: 0 14px 55px rgba(0,0,0,.6);
+    }
+
+    .foot{
+      max-width:1100px;
+      margin: 16px auto 0;
+      padding: 10px 2px;
+      color: rgba(255,255,255,.35);
+      font-size: 11px;
+      text-align:center;
+    }
+  </style>
 </head>
 
 <body>
-
-<canvas id="fx"></canvas>
-
-<header>
-  <img src="apex-sigil.png"/>
-  <h1>APEX <span>OMPC / ATA</span></h1>
-</header>
-
-<section class="hero">
-  <h2>Authority you can cite. Evidence you can anchor.</h2>
-  <p>Public attestation ledger. Immutable surface. Market lens derives value without touching the record.</p>
-</section>
-
-<main>
-  <div class="grid" id="cards"></div>
-</main>
-
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">✕</span>
-    <pre id="modalText"></pre>
+  <!-- Background -->
+  <div class="bg-wrap" aria-hidden="true">
+    <canvas id="particles"></canvas>
+    <img class="sigil" src="apex-sigil.png" alt="" />
+    <div class="vignette"></div>
   </div>
-</div>
 
-<script>
-/* PARTICLES */
-const c=document.getElementById('fx'),x=c.getContext('2d');
-let w,h,p=[];
-function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
-addEventListener('resize',resize);resize();
-for(let i=0;i<120;i++)p.push({x:Math.random()*w,y:Math.random()*h,v:.3+Math.random()});
-function loop(){
-  x.clearRect(0,0,w,h);
-  x.fillStyle="rgba(201,162,77,.25)";
-  p.forEach(o=>{
-    o.y+=o.v;
-    if(o.y>h)o.y=0;
-    x.fillRect(o.x,o.y,1,1);
-  });
-  requestAnimationFrame(loop);
-}
-loop();
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <img src="apex-sigil.png" alt="APEX" />
+        <div class="t">
+          <b>APEX — OMPC / ATA</b>
+          <span>Authority Registry • Claims vs Reality • Market Lens</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="pill" id="livePill"><span class="dot"></span><span>LIVE SURFACE</span></div>
+        <div class="pill" id="clockPill">—</div>
+        <button class="btn" id="repoBtn" type="button">REPO</button>
+        <button class="btn gold" id="citeBtn" type="button">COPY CITATION PATTERN</button>
+      </div>
+    </div>
 
-/* DATA LOADER */
-const BASE = location.pathname.includes("/ompc-1") ? "/ompc-1" : "";
-const REGISTRY = BASE+"/registry/index.json";
-const AUTO = BASE+"/entries/_index.json";
+    <div class="hero">
+      <h1>Authority you can cite.<br/>Evidence you can anchor.</h1>
+      <p>
+        Public registry of records (ATA/OMPC style) plus a second layer that converts records into structured intelligence:
+        contradictions, catalysts, timelines, and watchlists. Same APEX tone. Clean. Calm. Weapon-grade.
+      </p>
+      <div class="cta">
+        <button class="btn gold" id="enterLedger" type="button">ENTER LEDGER</button>
+        <button class="btn" id="openLens" type="button">OPEN MARKET LENS</button>
+        <button class="btn" id="copyPattern2" type="button">COPY CITATION PATTERN</button>
+        <button class="btn" id="forceRefresh" type="button">FORCE REFRESH</button>
+      </div>
 
-async function loadIndex(){
-  try{
-    return await (await fetch(REGISTRY)).json();
-  }catch{
-    const a = await (await fetch(AUTO)).json();
-    return {entries:a.files.map(f=>({file:f}))};
-  }
-}
+      <div class="grid">
+        <div class="panel">
+          <div class="split">
+            <h3>Live Surface</h3>
+            <div class="pill" id="dataSourcePill">Registry: —</div>
+          </div>
 
-async function load(){
-  const data = await loadIndex();
-  const grid = document.getElementById("cards");
-  grid.innerHTML="";
-  for(const e of data.entries){
-    const name = e.name || e.file?.replace(".md","") || "Entry";
-    const file = e.file || e.path || e.name;
-    const card=document.createElement("div");
-    card.className="card";
-    card.innerHTML=`
-      <h3>${name}</h3>
-      ${(e.tags||[]).map(t=>`<span class="badge">${t}</span>`).join("")}
-      <div class="actions">
-        <button onclick="openEntry('${file}')">OPEN</button>
-      </div>`;
-    grid.appendChild(card);
-  }
-}
+          <div class="kv">
+            <div class="pill" id="entriesPill">Entries: —</div>
+            <div class="pill" id="viewerPill">Viewer: —</div>
+            <div class="pill" id="tzPill">Timezone: —</div>
+            <div class="pill" id="localePill">Locale: —</div>
+          </div>
+          <div class="kv">
+            <div class="pill" id="nowPill">Now: —</div>
+          </div>
 
-async function openEntry(file){
-  const res = await fetch(BASE+"/entries/"+file);
-  document.getElementById("modalText").textContent = await res.text();
-  document.getElementById("modal").classList.add("open");
-}
-function closeModal(){
-  document.getElementById("modal").classList.remove("open");
-}
+          <div class="cta" style="margin-top:10px">
+            <button class="btn gold" id="tabLedger" type="button">LEDGER</button>
+            <button class="btn" id="tabLens" type="button">MARKET LENS</button>
+            <button class="btn" id="tabPricing" type="button">PRICING</button>
+            <button class="btn" id="tabContact" type="button">CONTACT</button>
+          </div>
+        </div>
 
-load();
-</script>
+        <div class="panel">
+          <div class="split">
+            <h3>Market Lens</h3>
+            <div class="status">Mismatch Watch</div>
+          </div>
+          <p style="margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.5">
+            Paid layer: contradictions + catalysts. The ledger stays public; the lens becomes the product.
+          </p>
+          <div class="kv" style="margin-top:10px">
+            <div class="pill">Lens: <b style="margin-left:6px;color:rgba(255,255,255,.9)">Active</b></div>
+            <div class="pill">Output: <b style="margin-left:6px;color:rgba(255,255,255,.9)">Watchlists</b></div>
+            <div class="pill">Mode: <b style="margin-left:6px;color:rgba(255,255,255,.9)">Surface</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <div class="controls">
+      <div class="search">
+        <input id="q" type="search" placeholder="Search: company, tags, ID, jurisdiction…" />
+        <select id="status">
+          <option value="all">Status: All</option>
+          <option value="unverified">Unverified</option>
+          <option value="verified">Verified</option>
+        </select>
+      </div>
+      <div class="meta" id="metaLine">—</div>
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <div class="foot">© 2026 APEX • OMPC / ATA Surface • Data: <span id="footData">—</span></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modalBack" id="modalBack" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHead">
+        <div class="modalTitle" id="modalTitle">Entry</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn" id="copyEntryLink">COPY LINK</button>
+          <button class="btn gold" id="copyEntryCite">COPY CITATION</button>
+          <button class="btn" id="closeModal">CLOSE</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <div class="md" id="modalBody">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Markdown renderer -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    /* ==========================
+       Base path (GitHub Pages safe)
+       - If repo pages: https://user.github.io/ompc-1/
+         base => "/ompc-1/"
+       - If user pages: https://user.github.io/
+         base => "/"
+    ========================== */
+    function getBasePath(){
+      const p = location.pathname;
+      const parts = p.split('/').filter(Boolean);
+      // If deployed as /ompc-1/... assume first segment is repo name
+      if (location.hostname.endsWith('github.io') && parts.length > 0){
+        return '/' + parts[0] + '/';
+      }
+      return '/';
+    }
+    const BASE = getBasePath();
+
+    // Safe join for fetch URLs (prevents leading "/" breaking Pages)
+    function urlFor(rel){
+      rel = (rel || '').trim();
+      if (!rel) return BASE;
+      // Strip leading slash to keep it relative to BASE
+      if (rel.startsWith('/')) rel = rel.slice(1);
+      return BASE + rel;
+    }
+
+    /* ==========================
+       Viewer time / timezone / "city" label
+       NOTE: Browsers do NOT expose exact city without IP lookup.
+       We display:
+       - IANA timezone (e.g., Australia/Sydney)
+       - A human label derived from timezone (Sydney)
+    ========================== */
+    const locale = navigator.language || 'en-AU';
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const cityLabel = (tz.includes('/') ? tz.split('/').pop().replaceAll('_',' ') : tz);
+
+    function fmtNow(){
+      const d = new Date();
+      const s = new Intl.DateTimeFormat(locale, {
+        weekday:'short', year:'numeric', month:'2-digit', day:'2-digit',
+        hour:'2-digit', minute:'2-digit', second:'2-digit',
+        timeZone: tz, timeZoneName:'short'
+      }).format(d);
+      return s;
+    }
+
+    /* ==========================
+       UI refs
+    ========================== */
+    const el = (id)=>document.getElementById(id);
+    const cardsEl = el('cards');
+    const qEl = el('q');
+    const statusEl = el('status');
+    const metaLine = el('metaLine');
+
+    const modalBack = el('modalBack');
+    const modalTitle = el('modalTitle');
+    const modalBody = el('modalBody');
+    const toast = el('toast');
+
+    let REGISTRY = null;
+    let ENTRIES = [];
+    let CURRENT_ENTRY = null;
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=>toast.style.display='none', 1400);
+    }
+
+    function copyText(text){
+      navigator.clipboard.writeText(text).then(()=>showToast('Copied')).catch(()=>showToast('Copy failed'));
+    }
+
+    /* ==========================
+       Particles (canvas)
+    ========================== */
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+
+    let W=0,H=0, DPR=1;
+    function resize(){
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = canvas.clientWidth = window.innerWidth;
+      H = canvas.clientHeight = window.innerHeight;
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+    }
+    window.addEventListener('resize', resize);
+
+    const N = 90;
+    const pts = [];
+    function initParticles(){
+      pts.length=0;
+      for(let i=0;i<N;i++){
+        pts.push({
+          x: Math.random()*W,
+          y: Math.random()*H,
+          vx: (Math.random()-.5)*0.18,
+          vy: (Math.random()-.5)*0.18,
+          r: 1.0 + Math.random()*1.4,
+          a: 0.25 + Math.random()*0.55
+        });
+      }
+    }
+    function stepParticles(){
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      ctx.clearRect(0,0,W,H);
+
+      // soft glow
+      const g = ctx.createRadialGradient(W*0.35, H*0.18, 20, W*0.35, H*0.18, Math.max(W,H)*0.9);
+      g.addColorStop(0, 'rgba(220,180,90,0.08)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,W,H);
+
+      // points
+      for(const p of pts){
+        p.x += p.vx; p.y += p.vy;
+        if(p.x< -40) p.x = W+40;
+        if(p.x> W+40) p.x = -40;
+        if(p.y< -40) p.y = H+40;
+        if(p.y> H+40) p.y = -40;
+      }
+
+      // links
+      for(let i=0;i<pts.length;i++){
+        for(let j=i+1;j<pts.length;j++){
+          const a = pts[i], b = pts[j];
+          const dx = a.x-b.x, dy = a.y-b.y;
+          const d2 = dx*dx + dy*dy;
+          const max = 150*150;
+          if(d2 < max){
+            const t = 1 - (d2/max);
+            ctx.strokeStyle = `rgba(220,180,90,${0.10*t})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // draw dots
+      for(const p of pts){
+        ctx.fillStyle = `rgba(255,255,255,${0.16*p.a})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(220,180,90,${0.16*p.a})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(.8,p.r-0.6), 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(stepParticles);
+    }
+
+    /* ==========================
+       Registry load + render
+    ========================== */
+    async function loadRegistry(){
+      // Primary source you are using: registry/index.json
+      const registryUrl = urlFor('registry/index.json');
+      const res = await fetch(registryUrl, { cache: 'no-store' });
+      if(!res.ok){
+        throw new Error('Registry fetch failed: ' + res.status);
+      }
+      const data = await res.json();
+      REGISTRY = data;
+      ENTRIES = Array.isArray(data.entries) ? data.entries : [];
+      el('footData').textContent = 'registry/index.json';
+      el('dataSourcePill').textContent = 'Registry: Live (registry/index.json)';
+      el('entriesPill').textContent = 'Entries: ' + ENTRIES.length;
+      metaLine.textContent = `Entries: ${ENTRIES.length} • Updated: ${data.updated || '—'}`;
+      render();
+    }
+
+    function matches(entry, q, status){
+      if(status !== 'all'){
+        if((entry.status || '').toLowerCase() !== status) return false;
+      }
+      if(!q) return true;
+      q = q.toLowerCase();
+      const fields = [
+        entry.id, entry.name, entry.type, entry.jurisdiction, entry.scope, entry.summary,
+        ...(entry.tags || [])
+      ].filter(Boolean).join(' ').toLowerCase();
+      return fields.includes(q);
+    }
+
+    function render(){
+      const q = (qEl.value || '').trim();
+      const status = statusEl.value;
+
+      const items = ENTRIES.filter(e=>matches(e,q,status));
+      cardsEl.innerHTML = '';
+
+      metaLine.textContent = `Entries: ${items.length} • Updated: ${(REGISTRY && REGISTRY.updated) ? REGISTRY.updated : '—'}`;
+
+      for(const e of items){
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const id = e.id || '—';
+        const name = e.name || '—';
+        const summary = e.summary || '—';
+        const st = (e.status || 'unverified');
+
+        const tags = Array.isArray(e.tags) ? e.tags : [];
+
+        card.innerHTML = `
+          <div class="cardTop">
+            <div>
+              <div class="id">${escapeHtml(id)}</div>
+              <div class="name">${escapeHtml(name)}</div>
+              <div class="summary">${escapeHtml(summary)}</div>
+              <div class="tagrow">${tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+            </div>
+            <div class="status">${escapeHtml(st)}</div>
+          </div>
+          <div class="actions">
+            <button class="btn gold" data-open>OPEN</button>
+            <button class="btn" data-cite>COPY CITATION</button>
+            <button class="btn" data-src>SOURCE</button>
+          </div>
+        `;
+
+        card.querySelector('[data-open]').addEventListener('click', ()=>openEntry(e));
+        card.querySelector('[data-cite]').addEventListener('click', ()=>copyCitation(e));
+        card.querySelector('[data-src]').addEventListener('click', ()=>openSource(e));
+
+        cardsEl.appendChild(card);
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    }
+
+    function copyCitation(e){
+      // Compact, client-friendly citation pattern
+      const now = fmtNow();
+      const line = `${e.id || 'ATA'} — ${e.name || 'Entity'} (APEX OMPC/ATA Surface). Viewed ${now}. Source: ${e.source_url || '—'}`;
+      copyText(line);
+    }
+
+    function openSource(e){
+      if(e.source_url){
+        window.open(e.source_url, '_blank', 'noopener');
+      }else{
+        showToast('No source_url in registry');
+      }
+    }
+
+    async function openEntry(e){
+      CURRENT_ENTRY = e;
+      modalTitle.textContent = `${e.id || 'Entry'} — ${e.name || ''}`.trim();
+      modalBody.textContent = 'Loading…';
+      modalBack.style.display = 'flex';
+
+      // ENTRY PATH FIX (this is your root cause)
+      // - must be relative under the repo
+      // - must NOT start with "/"
+      const rawPath = e.entry_path || '';
+      const fetchUrl = urlFor(rawPath);
+
+      try{
+        const res = await fetch(fetchUrl, { cache:'no-store' });
+
+        // If it fails, DO NOT render 404 HTML.
+        if(!res.ok){
+          modalBody.innerHTML = `<div style="color:rgba(255,255,255,.75)">
+            <b>Entry not found.</b><br/>
+            Tried: <code>${escapeHtml(fetchUrl)}</code><br/>
+            Fix: ensure <code>entry_path</code> in <code>registry/index.json</code> points to an existing file under <code>/entries/</code>.
+          </div>`;
+          return;
+        }
+
+        const text = await res.text();
+
+        // If GitHub served an HTML 404 page, detect + block it
+        if(text.trim().startsWith('<!DOCTYPE html>') || text.includes('<title>Page not found')){
+          modalBody.innerHTML = `<div style="color:rgba(255,255,255,.75)">
+            <b>Entry path is wrong.</b><br/>
+            Your server returned an HTML 404 page instead of a markdown file.<br/>
+            Tried: <code>${escapeHtml(fetchUrl)}</code>
+          </div>`;
+          return;
+        }
+
+        const html = marked.parse(text);
+        modalBody.innerHTML = `<div class="md">${html}</div>`;
+      }catch(err){
+        modalBody.innerHTML = `<div style="color:rgba(255,255,255,.75)">
+          <b>Load failed.</b><br/>${escapeHtml(err.message || String(err))}
+        </div>`;
+      }
+    }
+
+    function closeModal(){
+      modalBack.style.display = 'none';
+      CURRENT_ENTRY = null;
+    }
+
+    // Modal buttons
+    el('closeModal').addEventListener('click', closeModal);
+    modalBack.addEventListener('click', (ev)=>{ if(ev.target === modalBack) closeModal(); });
+
+    el('copyEntryLink').addEventListener('click', ()=>{
+      if(!CURRENT_ENTRY){ showToast('No entry'); return; }
+      // deep link: just copy the page + id
+      const u = new URL(location.href);
+      u.searchParams.set('entry', CURRENT_ENTRY.id || '');
+      copyText(u.toString());
+    });
+
+    el('copyEntryCite').addEventListener('click', ()=>{
+      if(!CURRENT_ENTRY){ showToast('No entry'); return; }
+      copyCitation(CURRENT_ENTRY);
+    });
+
+    // Search / filter
+    qEl.addEventListener('input', render);
+    statusEl.addEventListener('change', render);
+
+    // Top buttons
+    el('forceRefresh').addEventListener('click', ()=>location.reload());
+    el('repoBtn').addEventListener('click', ()=>{
+      // Guess repo URL from BASE
+      const parts = BASE.split('/').filter(Boolean);
+      const repo = parts[0] || '';
+      window.open(`https://github.com/${location.hostname.split('.')[0]}/${repo}`, '_blank', 'noopener');
+    });
+
+    const citationPattern =
+`[APEX OMPC/ATA Surface] {ENTRY_ID} — {ENTITY}. Viewed {LOCAL_TIME} ({TIMEZONE}). Source: {SOURCE_URL}`;
+
+    function copyPattern(){ copyText(citationPattern); }
+    el('citeBtn').addEventListener('click', copyPattern);
+    el('copyPattern2').addEventListener('click', copyPattern);
+
+    // Tabs (placeholders)
+    el('enterLedger').addEventListener('click', ()=>showToast('Ledger: Surface'));
+    el('openLens').addEventListener('click', ()=>showToast('Market Lens: Coming online'));
+    el('tabLedger').addEventListener('click', ()=>showToast('Ledger'));
+    el('tabLens').addEventListener('click', ()=>showToast('Market Lens'));
+    el('tabPricing').addEventListener('click', ()=>showToast('Pricing'));
+    el('tabContact').addEventListener('click', ()=>showToast('Contact'));
+
+    // Viewer pills
+    el('viewerPill').textContent = 'Viewer: ' + cityLabel;
+    el('tzPill').textContent = 'Timezone: ' + tz;
+    el('localePill').textContent = 'Locale: ' + locale;
+
+    // Live clock (always correct — based on viewer device + timezone)
+    function tick(){
+      const now = fmtNow();
+      el('nowPill').textContent = 'Now: ' + now;
+      el('clockPill').textContent = now;
+      requestAnimationFrame(()=>{ /* smooth */ });
+    }
+    setInterval(tick, 1000);
+    tick();
+
+    // Boot
+    (async function boot(){
+      resize();
+      initParticles();
+      stepParticles();
+
+      try{
+        await loadRegistry();
+      }catch(err){
+        cardsEl.innerHTML = `
+          <div class="panel" style="grid-column:1/-1; background:rgba(10,12,16,.70)">
+            <h3>NO INDEX FOUND</h3>
+            <div style="color:rgba(255,255,255,.75);font-size:13px;line-height:1.6">
+              Failed to load <code>registry/index.json</code>.<br/>
+              Error: <code>${escapeHtml(err.message || String(err))}</code><br/><br/>
+              Ensure this file exists: <code>registry/index.json</code> (not .bak), and Pages is deployed from <code>main / root</code>.
+            </div>
+          </div>
+        `;
+        el('dataSourcePill').textContent = 'Registry: —';
+        el('entriesPill').textContent = 'Entries: —';
+        metaLine.textContent = 'Registry offline';
+        el('footData').textContent = '—';
+      }
+
+      // Open entry if deep-linked
+      const params = new URLSearchParams(location.search);
+      const want = params.get('entry');
+      if(want && ENTRIES.length){
+        const found = ENTRIES.find(x => (x.id || '') === want);
+        if(found) openEntry(found);
+      }
+    })();
+  </script>
 </body>
 </html>
