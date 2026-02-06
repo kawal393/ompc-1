@@ -3,895 +3,1235 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#07080b" />
   <title>APEX — OMPC / ATA Surface</title>
+  <meta name="description" content="APEX OMPC/ATA Surface — Authority registry + market lens. Public ledger, source-anchored, audit-grade." />
+
+  <!-- Font (system-first, zero fragility) -->
   <style>
     :root{
-      --bg:#05070b;
-      --panel: rgba(12,14,18,.68);
-      --panel2: rgba(12,14,18,.52);
-      --line: rgba(255,255,255,.10);
-      --line2: rgba(255,255,255,.06);
+      --bg:#07080b;
+      --panel: rgba(12, 14, 20, .62);
+      --panel2: rgba(12, 14, 20, .46);
+      --stroke: rgba(255,255,255,.10);
+      --stroke2: rgba(255,255,255,.06);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
-      --muted2: rgba(255,255,255,.44);
-      --gold: rgba(214,172,87,.95);
-      --gold2: rgba(214,172,87,.55);
-      --shadow: 0 18px 55px rgba(0,0,0,.52);
-      --r: 18px;
-      --r2: 14px;
+      --muted: rgba(255,255,255,.60);
+      --muted2: rgba(255,255,255,.45);
+      --gold: rgba(255, 199, 92, .95);
+      --gold2: rgba(255, 199, 92, .55);
+      --ok: rgba(66, 255, 185, .85);
+      --bad: rgba(255, 95, 120, .85);
+      --shadow: 0 18px 70px rgba(0,0,0,.55);
+      --radius: 18px;
+      --radius2: 14px;
+      --blur: 16px;
       --max: 1120px;
-      --pad: clamp(14px, 4vw, 26px);
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
 
     *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family:var(--font);
-      background: radial-gradient(1200px 700px at 50% -10%, rgba(214,172,87,.12), transparent 55%),
-                  radial-gradient(900px 520px at 5% 30%, rgba(110,180,255,.08), transparent 55%),
-                  radial-gradient(900px 520px at 95% 30%, rgba(255,140,110,.06), transparent 55%),
-                  linear-gradient(180deg, #05070b 0%, #06070a 40%, #05060a 100%);
-      color:var(--text);
-      overflow-x:hidden;
+    html, body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); }
+    a{ color: inherit; text-decoration:none; }
+    button{ font-family:inherit; }
+
+    /* ====== BACKGROUND LAYERS (FIXED: particles + sigil ALWAYS visible) ====== */
+    .bg-wrap{
+      position:fixed; inset:0; overflow:hidden;
+      z-index:0;
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(255,199,92,.10), transparent 62%),
+        radial-gradient(900px 900px at 80% 30%, rgba(102,196,255,.08), transparent 60%),
+        radial-gradient(1200px 800px at 50% 90%, rgba(255,255,255,.06), transparent 65%),
+        linear-gradient(180deg, #07080b 0%, #06070a 40%, #04050a 100%);
     }
 
-    /* BACKGROUND LAYERS */
-    #particles{
-      position:fixed;
-      inset:0;
-      z-index:0;
-      pointer-events:none;
-      opacity:.85;
-    }
+    /* Apex sigil behind EVERYTHING but still readable */
     .sigil{
-      position:fixed;
-      inset:auto 0 -8% 0;
-      height:min(72vh, 820px);
-      z-index:1;
-      pointer-events:none;
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
-      opacity:.62; /* make it visible */
-      filter: saturate(1.05) contrast(1.08);
-      mix-blend-mode: screen;
-    }
-    .sigil img{
-      width:min(92vw, 920px);
+      position:absolute;
+      left:50%; top:58%;
+      width:min(980px, 120vw);
       height:auto;
-      filter: drop-shadow(0 40px 90px rgba(0,0,0,.65));
-      opacity:.95;
+      transform: translate(-50%, -50%);
+      opacity:.22;               /* visible */
+      filter: saturate(1.15) contrast(1.05) brightness(.92) drop-shadow(0 40px 120px rgba(255,199,92,.18));
+      mix-blend-mode: screen;
+      pointer-events:none;
+      user-select:none;
+      z-index:1;                 /* above base gradients, below particles + UI */
     }
-    .vignette{
-      position:fixed; inset:0;
+
+    /* Particles canvas on top of sigil, under UI */
+    #particles{
+      position:absolute; inset:0;
       z-index:2;
       pointer-events:none;
-      background:
-        radial-gradient(900px 520px at 50% 18%, rgba(0,0,0,.02), rgba(0,0,0,.45) 60%, rgba(0,0,0,.72) 100%),
-        linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.62));
+      opacity:.80;
     }
 
-    /* CONTENT */
-    .wrap{
-      position:relative;
-      z-index:10; /* always above particles + sigil */
-      padding: calc(var(--pad) + env(safe-area-inset-top)) var(--pad) calc(var(--pad) + env(safe-area-inset-bottom));
-      display:flex;
-      justify-content:center;
+    /* Soft vignette + mist */
+    .vignette{
+      position:absolute; inset:-2px;
+      background: radial-gradient(1200px 800px at 50% 20%, transparent 0%, rgba(0,0,0,.35) 60%, rgba(0,0,0,.66) 100%);
+      z-index:3;
+      pointer-events:none;
     }
-    .container{
-      width:100%;
-      max-width:var(--max);
+
+    /* ====== UI LAYER ====== */
+    .ui{
+      position:relative;
+      z-index:10;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
     }
 
     .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding: 10px 12px;
-      border: 1px solid var(--line2);
-      border-radius: 999px;
-      background: rgba(8,10,14,.55);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      position:sticky; top:0;
+      backdrop-filter: blur(14px);
+      background: rgba(5,6,10,.35);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      z-index:30;
     }
-    .brand{
-      display:flex; align-items:center; gap:10px; min-width:0;
-    }
-    .brand img{
-      width:28px; height:28px; border-radius:10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,.35);
-      border:1px solid rgba(255,255,255,.10);
-    }
-    .brand .t{
-      line-height:1.1;
-      min-width:0;
-    }
-    .brand .t b{
-      font-size:12px; letter-spacing:.12em; text-transform:uppercase;
-      display:block;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    }
-    .brand .t span{
-      font-size:11px; color:var(--muted);
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      display:block;
-    }
-
-    .chiprow{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
-    .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid var(--line2);
-      background: rgba(10,12,16,.55);
-      backdrop-filter: blur(10px);
-      font-size:11px;
-      color:var(--muted);
-    }
-    .dot{
-      width:8px; height:8px; border-radius:50%;
-      background:#2fe18a;
-      box-shadow: 0 0 0 3px rgba(47,225,138,.12), 0 0 22px rgba(47,225,138,.35);
-    }
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      gap:8px;
-      padding:9px 12px;
-      border-radius:999px;
-      border:1px solid rgba(214,172,87,.35);
-      background: linear-gradient(180deg, rgba(214,172,87,.12), rgba(214,172,87,.05));
-      color: rgba(255,255,255,.90);
-      font-size:12px;
-      cursor:pointer;
-      user-select:none;
-      text-decoration:none;
-      transition: transform .12s ease, border-color .12s ease, background .12s ease;
-      white-space:nowrap;
-    }
-    .btn:active{ transform: scale(.98); }
-    .btn.ghost{
-      border:1px solid var(--line2);
-      background: rgba(12,14,18,.45);
-      color: var(--muted);
-    }
-
-    .hero{
-      margin-top:14px;
-      border-radius: calc(var(--r) + 6px);
-      border:1px solid var(--line2);
-      background: radial-gradient(900px 420px at 50% 0%, rgba(214,172,87,.11), transparent 55%),
-                  linear-gradient(180deg, rgba(12,14,18,.72), rgba(12,14,18,.52));
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      position:relative;
-    }
-    .hero:before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(600px 280px at 20% 10%, rgba(110,180,255,.08), transparent 60%),
-                  radial-gradient(600px 280px at 80% 10%, rgba(255,140,110,.06), transparent 60%);
-      pointer-events:none;
-    }
-    .heroInner{
-      position:relative;
-      padding: 18px;
-    }
-    h1{
-      margin:0;
-      font-size: clamp(26px, 5.5vw, 42px);
-      letter-spacing:-.02em;
-      line-height:1.05;
-    }
-    .sub{
-      margin-top:8px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height:1.45;
-      max-width: 72ch;
-    }
-    .ctaRow{
-      margin-top:14px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .stats{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap:10px;
-    }
-    .card{
-      grid-column: span 12;
-      padding:12px 12px;
-      border-radius: var(--r2);
-      border:1px solid var(--line2);
-      background: rgba(10,12,16,.40);
-      backdrop-filter: blur(12px);
-    }
-    .card b{ display:block; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color: rgba(255,255,255,.78); }
-    .card .v{ margin-top:6px; font-size:12px; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap; }
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid var(--line2);
-      background: rgba(12,14,18,.55);
-    }
-    .pill em{ font-style:normal; color: rgba(255,255,255,.85); }
-    .pill small{ color: var(--muted2); }
-
-    @media (min-width: 760px){
-      .card{ grid-column: span 6; }
-    }
-
-    .panel{
-      margin-top: 14px;
-      border-radius: calc(var(--r) + 6px);
-      border:1px solid var(--line2);
-      background: linear-gradient(180deg, rgba(12,14,18,.70), rgba(12,14,18,.44));
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .panelHead{
+    .topbar-inner{
+      max-width:var(--max);
+      margin:0 auto;
       padding: 12px 14px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
-      border-bottom:1px solid var(--line2);
+      gap:12px;
     }
-    .panelHead .left{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width: 200px;
     }
-    .search{
-      flex: 1 1 240px;
-      min-width: 180px;
-      display:flex;
-      align-items:center;
-      padding:10px 12px;
-      border-radius: 999px;
-      border:1px solid var(--line2);
-      background: rgba(8,10,14,.55);
-      color: rgba(255,255,255,.84);
-      outline:none;
-    }
-    .select{
-      padding:10px 12px;
-      border-radius: 999px;
-      border:1px solid var(--line2);
-      background: rgba(8,10,14,.55);
-      color: rgba(255,255,255,.84);
-      outline:none;
-    }
-
-    .grid{
-      padding: 12px 14px 16px;
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap:10px;
-    }
-    .entry{
-      grid-column: span 12;
-      padding: 12px;
-      border-radius: var(--r2);
-      border:1px solid var(--line2);
-      background: rgba(10,12,16,.40);
-      backdrop-filter: blur(12px);
+    .mark{
+      width:28px; height:28px;
+      border-radius:10px;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255,199,92,.9), rgba(255,199,92,.0) 62%),
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,0));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 28px rgba(0,0,0,.55);
       position:relative;
       overflow:hidden;
     }
-    .entry:before{
+    .mark:after{
       content:"";
-      position:absolute; inset:-1px;
-      background: radial-gradient(420px 160px at 30% 0%, rgba(214,172,87,.10), transparent 60%);
-      opacity:.9;
-      pointer-events:none;
+      position:absolute; inset:-40%;
+      background: conic-gradient(from 180deg, rgba(255,199,92,.0), rgba(255,199,92,.35), rgba(255,199,92,.0));
+      animation: spin 7.5s linear infinite;
+      opacity:.55;
     }
-    .entry .in{ position:relative; }
-    .entryTop{
-      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    .brand-text{
+      display:flex; flex-direction:column; line-height:1.05;
     }
-    .id{
+    .brand-text b{ letter-spacing:.02em; font-size:13px; }
+    .brand-text span{ color:var(--muted2); font-size:11px; }
+
+    .statusline{
+      display:flex; align-items:center; gap:10px;
+      color:var(--muted);
       font-size:12px;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      color: rgba(214,172,87,.92);
+      white-space:nowrap;
     }
-    .name{
-      margin-top:6px;
-      font-size: 18px;
-      letter-spacing:-.01em;
+    .dot{
+      width:8px; height:8px; border-radius:99px;
+      background: var(--ok);
+      box-shadow: 0 0 18px rgba(66,255,185,.35);
+      display:inline-block;
     }
-    .meta{
-      margin-top:6px;
-      color: var(--muted);
-      font-size: 12px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .badge{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px;
+    .pill{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(10,12,18,.40);
+      padding: 7px 10px;
       border-radius:999px;
-      border:1px solid rgba(214,172,87,.25);
-      background: rgba(214,172,87,.08);
-      font-size:11px;
-      color: rgba(255,255,255,.78);
+      display:flex; align-items:center; gap:8px;
+      backdrop-filter: blur(10px);
     }
-    .tags{
-      margin-top:10px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+    .pill code{ font-family:var(--mono); font-size:11px; color:rgba(255,255,255,.75); }
+
+    .btn{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(10,12,18,.55);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size:12px;
+      letter-spacing:.02em;
+      cursor:pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
     }
-    .tag{
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line2);
-      background: rgba(12,14,18,.55);
-      color: var(--muted);
-      font-size:11px;
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(255,199,92,.30); background: rgba(18,20,28,.62); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn.gold{
+      border-color: rgba(255,199,92,.40);
+      background: rgba(255,199,92,.10);
     }
-    .actions{
-      margin-top:12px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+    .btn.ghost{ background: rgba(10,12,18,.28); }
+    .btn.small{ padding: 8px 10px; font-size:11px; }
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding: 18px 14px 60px;
+      width:100%;
     }
 
-    @media (min-width: 760px){
-      .entry{ grid-column: span 6; }
+    .hero{
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(12,14,20,.72), rgba(12,14,20,.52));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(var(--blur));
+      position:relative;
+      overflow:hidden;
     }
-    @media (min-width: 1060px){
-      .entry{ grid-column: span 4; }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background: radial-gradient(700px 300px at 20% 0%, rgba(255,199,92,.12), transparent 60%);
+      pointer-events:none;
+      z-index:0;
+    }
+    .hero > *{ position:relative; z-index:1; }
+
+    h1{
+      margin:0;
+      font-size: 36px;
+      letter-spacing:-.02em;
+      line-height:1.05;
+    }
+    .sub{
+      margin-top:10px;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 78ch;
+    }
+
+    .hero-actions{
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin-top: 14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.3fr .9fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+      h1{ font-size: 32px; }
+    }
+
+    .panel{
+      border-radius: var(--radius);
+      background: var(--panel);
+      border:1px solid var(--stroke);
+      box-shadow: 0 10px 45px rgba(0,0,0,.45);
+      backdrop-filter: blur(var(--blur));
+      padding: 14px;
+    }
+    .panel h3{
+      margin: 0 0 10px;
+      font-size: 12px;
+      letter-spacing:.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.70);
+    }
+    .kv{
+      display:flex; flex-wrap:wrap; gap:10px;
+    }
+    .kv .chip{
+      display:flex; align-items:center; gap:8px;
+      padding: 9px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.85);
+      font-size:12px;
+    }
+    .chip b{ color: rgba(255,255,255,.92); font-weight:600; }
+    .chip span{ color: rgba(255,255,255,.62); }
+    .chip code{ font-family:var(--mono); font-size:11px; color: rgba(255,255,255,.78); }
+
+    .tabs{
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin-top: 14px;
+    }
+
+    .content{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .toolbar{
+      display:flex; flex-wrap:wrap; gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .tool-left, .tool-right{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    }
+    .input{
+      display:flex; align-items:center; gap:8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.10);
+      min-width: 260px;
+    }
+    .input input{
+      width:100%;
+      border:none;
+      outline:none;
+      background: transparent;
+      color: rgba(255,255,255,.90);
+      font-size: 13px;
+    }
+    .select{
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.85);
+      font-size: 13px;
+      outline:none;
+    }
+    .meta{
+      color: rgba(255,255,255,.60);
+      font-size: 12px;
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 820px){ .cards{ grid-template-columns: 1fr; } }
+
+    .card{
+      border-radius: var(--radius);
+      background: rgba(12,14,20,.62);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 10px 40px rgba(0,0,0,.40);
+      backdrop-filter: blur(var(--blur));
+      padding: 14px;
+      position:relative;
+      overflow:hidden;
+      transform: translateZ(0);
+      transition: transform .18s ease, border-color .18s ease;
+    }
+    .card:hover{ transform: translateY(-2px); border-color: rgba(255,199,92,.24); }
+    .badge{
+      position:absolute;
+      top: 12px; right: 12px;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.24);
+      color: rgba(255,255,255,.80);
+    }
+    .badge.warn{ border-color: rgba(255,199,92,.28); color: rgba(255,199,92,.92); }
+    .badge.ok{ border-color: rgba(66,255,185,.28); color: rgba(66,255,185,.92); }
+    .badge.bad{ border-color: rgba(255,95,120,.28); color: rgba(255,95,120,.92); }
+
+    .idline{
+      font-family: var(--mono);
+      color: rgba(255,199,92,.92);
+      font-size: 11px;
+      letter-spacing:.06em;
+      margin-bottom: 6px;
+    }
+    .name{
+      font-size: 18px;
+      margin: 0;
+      letter-spacing:-.01em;
+    }
+    .desc{
+      margin-top: 8px;
+      color: rgba(255,255,255,.62);
+      font-size: 12px;
+      line-height: 1.4;
+      min-height: 34px;
+    }
+    .tags{
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin-top: 10px;
+    }
+    .tag{
+      font-size: 11px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.72);
+    }
+    .card-actions{
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin-top: 12px;
+    }
+
+    /* Modal entry viewer */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      z-index:100;
+      padding: 18px;
+      background: rgba(0,0,0,.62);
+      backdrop-filter: blur(8px);
+    }
+    .modal.open{ display:flex; }
+    .modal-box{
+      width:min(980px, 100%);
+      max-height: 86vh;
+      overflow:hidden;
+      border-radius: 20px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(10,12,18,.72);
+      box-shadow: 0 30px 140px rgba(0,0,0,.75);
+      display:flex; flex-direction:column;
+    }
+    .modal-head{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      padding: 12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+    }
+    .modal-title{
+      display:flex; flex-direction:column; gap:2px;
+      min-width:0;
+    }
+    .modal-title b{
+      font-size: 13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .modal-title span{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+    }
+    .modal-body{
+      padding: 14px;
+      overflow:auto;
+    }
+    .md{
+      line-height: 1.55;
+      color: rgba(255,255,255,.86);
+      font-size: 13px;
+    }
+    .md h1,.md h2,.md h3{ margin: 18px 0 10px; }
+    .md h1{ font-size: 18px; }
+    .md h2{ font-size: 16px; }
+    .md h3{ font-size: 14px; }
+    .md code{
+      font-family: var(--mono);
+      font-size: 12px;
+      background: rgba(255,255,255,.06);
+      padding: 2px 6px;
+      border-radius: 8px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .md pre{
+      background: rgba(0,0,0,.30);
+      padding: 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      overflow:auto;
+    }
+    .md blockquote{
+      margin: 12px 0;
+      padding: 10px 12px;
+      border-left: 3px solid rgba(255,199,92,.45);
+      background: rgba(255,199,92,.06);
+      border-radius: 12px;
+      color: rgba(255,255,255,.84);
+    }
+    .md a{
+      color: rgba(255,199,92,.95);
+      text-decoration: underline;
+      text-decoration-color: rgba(255,199,92,.35);
+      text-underline-offset: 3px;
+    }
+
+    /* Subtle motion */
+    .float{
+      animation: float 7.5s ease-in-out infinite;
+    }
+    @keyframes float{
+      0%,100%{ transform: translateY(0px); }
+      50%{ transform: translateY(-4px); }
     }
 
     .footer{
-      margin-top:14px;
-      padding: 12px 2px 0;
+      margin-top: 18px;
       color: rgba(255,255,255,.42);
-      font-size:11px;
-      display:flex;
+      font-size: 11px;
+      display:flex; flex-wrap:wrap; gap:10px;
       justify-content:space-between;
-      flex-wrap:wrap;
-      gap:8px;
+      align-items:center;
     }
-    a{ color: rgba(214,172,87,.90); }
-    .toast{
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      background: rgba(10,12,16,.82);
-      border:1px solid var(--line2);
-      border-radius: 999px;
-      padding: 10px 14px;
-      z-index: 9999;
-      color: rgba(255,255,255,.88);
-      font-size: 12px;
-      box-shadow: 0 18px 55px rgba(0,0,0,.55);
-      opacity: 0;
-      pointer-events:none;
-      transition: opacity .2s ease, transform .2s ease;
-    }
-    .toast.show{
-      opacity: 1;
-      transform: translateX(-50%) translateY(-4px);
-    }
+    .footer code{ font-family:var(--mono); color: rgba(255,255,255,.55); }
   </style>
 </head>
 
 <body>
-  <canvas id="particles"></canvas>
-
-  <div class="sigil" aria-hidden="true">
-    <img src="./apex-sigil.png" alt="">
+  <!-- BACKGROUND -->
+  <div class="bg-wrap" aria-hidden="true">
+    <img class="sigil" src="apex-sigil.png" alt="" />
+    <canvas id="particles"></canvas>
+    <div class="vignette"></div>
   </div>
-  <div class="vignette" aria-hidden="true"></div>
 
-  <div class="wrap">
-    <div class="container">
-      <div class="topbar">
+  <!-- UI -->
+  <div class="ui">
+    <div class="topbar">
+      <div class="topbar-inner">
         <div class="brand">
-          <img src="./apex-sigil.png" alt="APEX" />
-          <div class="t">
+          <div class="mark" aria-hidden="true"></div>
+          <div class="brand-text">
             <b>APEX — OMPC / ATA</b>
             <span>Authority Registry • Claims vs Reality • Market Lens</span>
           </div>
         </div>
 
-        <div class="chiprow">
-          <div class="chip"><span class="dot"></span><span id="liveLabel">LIVE SURFACE</span></div>
-          <div class="chip" id="nowChip">—</div>
-          <a class="btn ghost" id="repoBtn" href="#" target="_blank" rel="noreferrer">REPO</a>
-          <button class="btn" id="copyPatternBtn" type="button">COPY CITATION PATTERN</button>
+        <div class="statusline">
+          <div class="pill"><span class="dot"></span><span>LIVE SURFACE</span></div>
+          <div class="pill"><span id="clockLine">—</span></div>
+          <button class="btn ghost small" id="repoBtn" type="button">REPO</button>
+          <button class="btn gold small" id="copyPatternBtn" type="button">COPY CITATION PATTERN</button>
         </div>
       </div>
+    </div>
 
-      <div class="hero">
-        <div class="heroInner">
-          <h1>Authority you can cite.<br/>Evidence you can anchor.</h1>
-          <div class="sub">
-            Public ledger of records (ATA/OMPC). Second layer becomes the product:
-            watchlists, contradictions, catalysts, timelines. Clean. Calm. Weapon-grade.
+    <div class="wrap">
+      <section class="hero float">
+        <h1>Authority you can cite.<br/>Evidence you can anchor.</h1>
+        <div class="sub">
+          Public registry of records (ATA/OMPC style) plus a second layer that converts records into structured intelligence:
+          mismatch signals, catalysts, timelines, and watchlists. Clean. Calm. Weapon-grade.
+        </div>
+
+        <div class="hero-actions">
+          <button class="btn gold" id="enterLedgerBtn" type="button">ENTER LEDGER</button>
+          <button class="btn" id="openLensBtn" type="button">OPEN MARKET LENS</button>
+          <button class="btn" id="refreshBtn" type="button">FORCE REFRESH</button>
+        </div>
+
+        <div class="grid">
+          <div class="panel">
+            <h3>Live Surface</h3>
+            <div class="kv" style="margin-bottom:10px">
+              <div class="chip"><b>Registry</b> <span id="regStatus">—</span></div>
+              <div class="chip"><b>Entries</b> <span id="entryCount">0</span></div>
+              <div class="chip"><b>Viewer</b> <span id="viewerCity">—</span></div>
+              <div class="chip"><b>Timezone</b> <code id="viewerTz">—</code></div>
+              <div class="chip"><b>Locale</b> <code id="viewerLocale">—</code></div>
+              <div class="chip"><b>Now</b> <code id="viewerNow">—</code></div>
+            </div>
+            <div class="tabs">
+              <button class="btn small gold" id="tabLedger" type="button">LEDGER</button>
+              <button class="btn small" id="tabLens" type="button">MARKET LENS</button>
+              <button class="btn small" id="tabPricing" type="button">PRICING</button>
+              <button class="btn small" id="tabContact" type="button">CONTACT</button>
+            </div>
           </div>
 
-          <div class="ctaRow">
-            <button class="btn" id="enterLedgerBtn" type="button">ENTER LEDGER</button>
-            <button class="btn ghost" id="openLensBtn" type="button">OPEN MARKET LENS</button>
-            <button class="btn ghost" id="forceRefreshBtn" type="button">FORCE REFRESH</button>
+          <div class="panel">
+            <h3>Market Lens (Paid Layer)</h3>
+            <div class="sub" style="margin:0;color:rgba(255,255,255,.62)">
+              The ledger stays public. The lens becomes the product. We surface contradictions, catalysts, and timelines—without
+              exposing internal mechanics.
+            </div>
+            <div class="kv" style="margin-top:10px">
+              <div class="chip"><b>Lens</b> <span>MIS-MATCH WATCH</span></div>
+              <div class="chip"><b>Output</b> <span>Watchlists</span></div>
+              <div class="chip"><b>Mode</b> <span id="lensMode">Surface</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="content">
+        <!-- LEDGER -->
+        <div class="panel" id="ledgerPanel">
+          <div class="toolbar">
+            <div class="tool-left">
+              <div class="input">
+                <span style="opacity:.75">🔎</span>
+                <input id="q" placeholder="Search: company, tags, ID, jurisdiction..." />
+              </div>
+              <select class="select" id="statusFilter">
+                <option value="">Status: All</option>
+                <option value="unverified">Unverified</option>
+                <option value="verified">Verified</option>
+                <option value="watch">Watch</option>
+                <option value="flagged">Flagged</option>
+              </select>
+            </div>
+            <div class="tool-right">
+              <div class="meta" id="metaLine">Entries: — • Updated: —</div>
+              <button class="btn small" id="copySiteLinkBtn" type="button">COPY SITE LINK</button>
+            </div>
           </div>
 
-          <div class="stats">
+          <div class="cards" id="cards"></div>
+
+          <div class="footer">
+            <div>© <span id="year"></span> APEX • OMPC / ATA Surface</div>
+            <div><code id="dataPath">—</code></div>
+          </div>
+        </div>
+
+        <!-- LENS -->
+        <div class="panel" id="lensPanel" style="display:none">
+          <h3>Market Lens</h3>
+          <div class="sub" style="margin-top:0">
+            This is the commercial layer. Public records become structured intelligence.
+            (Kept deliberately non-executable on the public page.)
+          </div>
+          <div class="kv" style="margin-top:10px">
+            <div class="chip"><b>Signal Types</b> <span>Mismatch • Catalyst • Timeline</span></div>
+            <div class="chip"><b>Delivery</b> <span>Briefs + Watchlists</span></div>
+            <div class="chip"><b>Access</b> <span>Partner / Paid</span></div>
+          </div>
+          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+            <button class="btn gold" type="button" id="lensCTA">REQUEST ACCESS</button>
+            <button class="btn" type="button" id="lensDemo">VIEW DEMO PATTERN</button>
+          </div>
+          <div class="sub" style="margin-top:12px;color:rgba(255,255,255,.55)">
+            Demo pattern shows what customers get (outputs only). No internal method is exposed.
+          </div>
+          <pre class="md" style="margin-top:10px; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.10); border-radius:14px; padding:12px; overflow:auto;">
+[Watchlist Item]
+Entity: &lt;Company&gt;
+Claim: &lt;Public statement&gt;
+Reality anchor: &lt;Public record / result&gt;
+Mismatch: &lt;One-line&gt;
+Catalyst: &lt;Event trigger&gt;
+Next: &lt;What to watch next&gt;
+          </pre>
+        </div>
+
+        <!-- PRICING -->
+        <div class="panel" id="pricingPanel" style="display:none">
+          <h3>Pricing</h3>
+          <div class="sub" style="margin-top:0">
+            Public Ledger is free. The paid layer is the Lens.
+          </div>
+          <div class="cards" style="margin-top:12px">
             <div class="card">
-              <b>Registry</b>
-              <div class="v">
-                <span class="pill"><em id="regMode">Auto-index</em> <small id="regPath">./entries/_index.json</small></span>
-                <span class="pill"><em id="entryCount">0</em> <small>entries</small></span>
+              <div class="badge ok">PUBLIC</div>
+              <div class="idline">TIER 0</div>
+              <h2 class="name">Ledger Access</h2>
+              <div class="desc">Browse entries, cite IDs, open sources, verify existence. Always public.</div>
+              <div class="card-actions">
+                <button class="btn gold small" type="button" id="pricingEnter">ENTER LEDGER</button>
               </div>
             </div>
             <div class="card">
-              <b>Viewer</b>
-              <div class="v">
-                <span class="pill"><em id="viewerCity">—</em> <small>city</small></span>
-                <span class="pill"><em id="viewerTZ">—</em> <small>timezone</small></span>
-                <span class="pill"><em id="viewerLocale">—</em> <small>locale</small></span>
+              <div class="badge warn">PAID</div>
+              <div class="idline">TIER 1</div>
+              <h2 class="name">Market Lens</h2>
+              <div class="desc">Contradiction watchlists, catalysts, timelines. Output-only. No method exposure.</div>
+              <div class="card-actions">
+                <button class="btn gold small" type="button" id="pricingAccess">REQUEST ACCESS</button>
+                <button class="btn small" type="button" id="pricingCopy">COPY CONTACT</button>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="panel" id="ledgerPanel">
-        <div class="panelHead">
-          <div class="left" style="flex:1;">
-            <input class="search" id="search" placeholder="Search: company, tags, ID, jurisdiction..." />
-            <select class="select" id="statusFilter">
-              <option value="all">Status: All</option>
-              <option value="unverified">Unverified</option>
-              <option value="verified">Verified</option>
-              <option value="tracking">Tracking</option>
-              <option value="archived">Archived</option>
-            </select>
+        <!-- CONTACT -->
+        <div class="panel" id="contactPanel" style="display:none">
+          <h3>Contact</h3>
+          <div class="sub" style="margin-top:0">
+            Put your email or form link here when ready. For now, copy the pattern.
           </div>
-          <div class="chip" id="metaChip">Entries: 0 • Updated: —</div>
+          <pre class="md" style="margin-top:10px; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.10); border-radius:14px; padding:12px; overflow:auto;">
+Subject: APEX Market Lens — Access Request
+Body:
+- Organization:
+- Use-case:
+- Entities of interest:
+- Region / jurisdiction:
+- Required cadence:
+          </pre>
+          <button class="btn gold" type="button" id="contactCopy">COPY TEMPLATE</button>
         </div>
-        <div class="grid" id="grid"></div>
-      </div>
+      </section>
+    </div>
+  </div>
 
-      <div class="footer">
-        <div>© <span id="year"></span> APEX • OMPC / ATA Surface</div>
-        <div>
-          Data: <span id="dataHint">—</span>
+  <!-- MODAL VIEWER -->
+  <div class="modal" id="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title">
+          <b id="modalName">Loading…</b>
+          <span id="modalMeta">—</span>
         </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <button class="btn small" id="modalSourceBtn" type="button">OPEN SOURCE</button>
+          <button class="btn small gold" id="modalCopyBtn" type="button">COPY CITATION</button>
+          <button class="btn small" id="modalCloseBtn" type="button">CLOSE</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="md" id="modalMd">—</div>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <!-- Markdown renderer -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<script>
-/* =========================
-   BASE PATH (fixes your “entries not loading”)
-   Works on:
-   - https://kawal393.github.io/ompc-1/
-   - custom domains
-   ========================= */
-const BASE = new URL('.', window.location.href);
-const url = (p) => new URL(p, BASE).toString();
+  <script>
+    /**********************
+     * BASE PATH (GitHub Pages safe)
+     * Works for:
+     * https://kawal393.github.io/ompc-1/
+     **********************/
+    const ORIGIN = window.location.origin;
+    const PATH = window.location.pathname;
 
-/* Repo button */
-document.getElementById('repoBtn').href = "https://github.com/kawal393/ompc-1";
+    // detect repo base: "/ompc-1/" if present
+    const basePath = (() => {
+      const parts = PATH.split("/").filter(Boolean);
+      // for project pages: first segment is repo name
+      if (parts.length >= 1) return "/" + parts[0] + "/";
+      return "/";
+    })();
 
-/* =========================
-   TIME + CITY (viewer)
-   ========================= */
-const nowChip = document.getElementById('nowChip');
-const viewerTZ = document.getElementById('viewerTZ');
-const viewerLocale = document.getElementById('viewerLocale');
-const viewerCity = document.getElementById('viewerCity');
+    const join = (p) => (basePath.replace(/\/+$/,"/") + p.replace(/^\/+/,""));
 
-function prettyCityFromTZ(tz){
-  if (!tz) return "Unknown";
-  const parts = tz.split('/');
-  if (parts.length === 1) return tz;
-  const city = parts[parts.length - 1].replaceAll('_',' ');
-  return city || tz;
-}
+    /**********************
+     * VIEWER CLOCK + TZ + "CITY" (best-effort, no fragile dependencies)
+     **********************/
+    const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown";
+    const viewerLocale = navigator.language || "en";
+    const cityFromTz = (() => {
+      // "Australia/Sydney" => "Sydney"
+      if (!viewerTz || viewerTz === "Unknown") return "Unknown";
+      const last = viewerTz.split("/").pop() || "Unknown";
+      return last.replace(/_/g," ");
+    })();
 
-function tickClock(){
-  const locale = navigator.language || 'en-AU';
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-  const d = new Date();
-
-  const fmt = new Intl.DateTimeFormat(locale, {
-    weekday:'short', year:'numeric', month:'2-digit', day:'2-digit',
-    hour:'2-digit', minute:'2-digit', second:'2-digit',
-    hour12:false, timeZone: tz
-  });
-
-  nowChip.textContent = fmt.format(d) + " • " + tz;
-  viewerTZ.textContent = tz;
-  viewerLocale.textContent = locale;
-  viewerCity.textContent = prettyCityFromTZ(tz);
-}
-setInterval(tickClock, 1000);
-tickClock();
-
-document.getElementById('year').textContent = new Date().getFullYear();
-
-/* =========================
-   TOAST
-   ========================= */
-const toast = document.getElementById('toast');
-let toastTimer = null;
-function showToast(msg){
-  toast.textContent = msg;
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>toast.classList.remove('show'), 1600);
-}
-
-/* =========================
-   DATA LOADING (registry/index.json OR entries/_index.json)
-   ========================= */
-const grid = document.getElementById('grid');
-const metaChip = document.getElementById('metaChip');
-const entryCount = document.getElementById('entryCount');
-const regMode = document.getElementById('regMode');
-const regPath = document.getElementById('regPath');
-const dataHint = document.getElementById('dataHint');
-
-let ALL = [];
-let UPDATED = null;
-
-async function fetchJSON(path){
-  const res = await fetch(url(path), { cache: "no-store" });
-  if (!res.ok) throw new Error(`${path} -> ${res.status}`);
-  return await res.json();
-}
-
-async function loadData(){
-  grid.innerHTML = "";
-  metaChip.textContent = "Loading…";
-  regMode.textContent = "Auto-index";
-  regPath.textContent = "./entries/_index.json";
-  dataHint.textContent = "Loading…";
-
-  // Prefer registry/index.json (your richer schema)
-  try {
-    const reg = await fetchJSON("registry/index.json");
-    if (reg && Array.isArray(reg.entries) && reg.entries.length){
-      ALL = reg.entries.map(e => ({
-        id: e.id || "",
-        name: e.name || "",
-        type: e.type || "",
-        jurisdiction: e.jurisdiction || "",
-        scope: e.scope || "",
-        status: (e.status || "unverified").toLowerCase(),
-        tags: Array.isArray(e.tags) ? e.tags : [],
-        summary: e.summary || "Public attestation record. Presence-only. Source-anchored.",
-        source_url: e.source_url || "",
-        entry_path: e.entry_path || ""
-      }));
-      UPDATED = reg.updated || null;
-      regMode.textContent = "Registry";
-      regPath.textContent = "./registry/index.json";
-      dataHint.textContent = "registry/index.json";
-      return;
+    function formatNow(){
+      const d = new Date();
+      const opts = { weekday:"short", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" };
+      const line = new Intl.DateTimeFormat(viewerLocale, opts).format(d);
+      return line;
     }
-  } catch (_) {}
 
-  // Fallback: entries/_index.json (simple file list)
-  // Supports either:
-  // 1) { "files": ["ATA-2026-0001-BHP.md", ...] }
-  // 2) ["ATA-2026-0001-BHP.md", ...]
-  try {
-    const idx = await fetchJSON("entries/_index.json");
-    const files = Array.isArray(idx) ? idx : (Array.isArray(idx.files) ? idx.files : []);
-    if (!files.length) throw new Error("No files in _index.json");
+    function tick(){
+      const now = formatNow();
+      document.getElementById("viewerNow").textContent = now;
+      document.getElementById("clockLine").textContent = now + " • " + viewerTz;
+    }
 
-    ALL = files.map((fn) => {
-      const base = fn.replace(/\.md$/i,"");
-      const parts = base.split("-");
-      const id = parts.slice(0,3).join("-"); // ATA-2026-0001
-      const name = parts.slice(3).join(" ").replaceAll("_"," ").trim() || base;
-      return {
-        id,
-        name,
-        type: "Public Record",
-        jurisdiction: "—",
-        scope: "—",
-        status: "unverified",
-        tags: [],
-        summary: "Public attestation record. Presence-only. Source-anchored.",
-        source_url: "",
-        entry_path: `./entries/${fn}`
-      };
-    });
-    UPDATED = null;
-    regMode.textContent = "Auto-index";
-    regPath.textContent = "./entries/_index.json";
-    dataHint.textContent = "entries/_index.json";
-    return;
-  } catch (e) {
-    ALL = [];
-    UPDATED = null;
-    dataHint.textContent = "NO INDEX FOUND";
-    throw e;
-  }
-}
-
-function escapeHTML(s){
-  return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function badgeLabel(status){
-  const s = (status || "unverified").toLowerCase();
-  if (s === "verified") return "Verified";
-  if (s === "tracking") return "Tracking";
-  if (s === "archived") return "Archived";
-  return "Unverified";
-}
-
-function normalize(s){ return (s||"").toLowerCase().trim(); }
-
-function applyFilters(){
-  const q = normalize(document.getElementById('search').value);
-  const status = document.getElementById('statusFilter').value;
-
-  const filtered = ALL.filter(e => {
-    const hay = normalize([e.id, e.name, e.type, e.jurisdiction, e.scope, e.summary, ...(e.tags||[])].join(" "));
-    const okQ = !q || hay.includes(q);
-    const okS = (status === "all") || normalize(e.status) === status;
-    return okQ && okS;
-  });
-
-  render(filtered);
-}
-
-function render(list){
-  grid.innerHTML = "";
-  entryCount.textContent = String(list.length);
-
-  const updatedText = UPDATED ? UPDATED : "—";
-  metaChip.textContent = `Entries: ${list.length} • Updated: ${updatedText}`;
-
-  if (!list.length){
-    const div = document.createElement('div');
-    div.className = 'entry';
-    div.style.gridColumn = 'span 12';
-    div.innerHTML = `<div class="in">
-      <div class="name">No matches.</div>
-      <div class="meta">Change filters or search again.</div>
-    </div>`;
-    grid.appendChild(div);
-    return;
-  }
-
-  for (const e of list){
-    const div = document.createElement('div');
-    div.className = 'entry';
-
-    const tags = (e.tags || []).slice(0,6).map(t => `<span class="tag">${escapeHTML(String(t))}</span>`).join("");
-    const openURL = e.entry_path ? url(e.entry_path.replace(/^\.\//,'')) : "";
-    const sourceURL = e.source_url || "";
-
-    // Citation pattern (stable)
-    const citation = `${e.id || "ATA-YYYY-NNNN"} — ${e.name || "Entity"} (APEX OMPC/ATA) • Source: ${sourceURL || "[source-url]"} • Record: ${openURL || "[record-url]"}`;
-
-    div.innerHTML = `
-      <div class="in">
-        <div class="entryTop">
-          <div>
-            <div class="id">${escapeHTML(e.id)}</div>
-            <div class="name">${escapeHTML(e.name)}</div>
-            <div class="meta">
-              <span>${escapeHTML(e.type || "Public Record")}</span>
-              <span>•</span>
-              <span>${escapeHTML(e.jurisdiction || "—")}</span>
-              <span>•</span>
-              <span>${escapeHTML(e.scope || "—")}</span>
-            </div>
-          </div>
-          <span class="badge">${badgeLabel(e.status)}</span>
-        </div>
-
-        <div class="meta" style="margin-top:10px;">${escapeHTML(e.summary || "")}</div>
-
-        <div class="tags">${tags || `<span class="tag">Resources</span><span class="tag">Infrastructure</span>`}</div>
-
-        <div class="actions">
-          <a class="btn" href="${openURL}" target="_blank" rel="noreferrer">OPEN</a>
-          <button class="btn ghost" type="button" data-cite="${escapeHTML(citation)}">COPY CITATION</button>
-          ${sourceURL ? `<a class="btn ghost" href="${escapeHTML(sourceURL)}" target="_blank" rel="noreferrer">SOURCE</a>` : `<span class="btn ghost" style="opacity:.55; pointer-events:none;">SOURCE</span>`}
-        </div>
-      </div>
-    `;
-    grid.appendChild(div);
-  }
-
-  // Bind copy buttons
-  grid.querySelectorAll('button[data-cite]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const text = btn.getAttribute('data-cite') || '';
+    // Optional city improvement (IP-based) — graceful fallback if blocked
+    async function tryCity(){
       try{
-        await navigator.clipboard.writeText(text);
-        showToast("Citation copied.");
-      }catch{
-        showToast("Copy failed (browser).");
+        const r = await fetch("https://ipapi.co/json/", { cache:"no-store" });
+        if(!r.ok) throw new Error("ipapi fail");
+        const j = await r.json();
+        if (j && (j.city || j.region || j.country_name)){
+          const bits = [j.city, j.region].filter(Boolean);
+          const nice = bits.join(", ") || j.country_name || cityFromTz;
+          document.getElementById("viewerCity").textContent = nice;
+          if (j.timezone) document.getElementById("viewerTz").textContent = j.timezone;
+          return;
+        }
+      }catch(e){
+        // no-op
       }
-    });
-  });
-}
-
-/* =========================
-   ACTIONS
-   ========================= */
-document.getElementById('search').addEventListener('input', applyFilters);
-document.getElementById('statusFilter').addEventListener('change', applyFilters);
-
-document.getElementById('copyPatternBtn').addEventListener('click', async ()=>{
-  const pattern = `ATA-YYYY-NNNN — Entity Name (APEX OMPC/ATA) • Source: [source-url] • Record: [record-url]`;
-  try{
-    await navigator.clipboard.writeText(pattern);
-    showToast("Citation pattern copied.");
-  }catch{
-    showToast("Copy failed (browser).");
-  }
-});
-
-document.getElementById('forceRefreshBtn').addEventListener('click', async ()=>{
-  try{
-    await boot(true);
-    showToast("Refreshed.");
-  }catch{
-    showToast("Refresh failed.");
-  }
-});
-
-document.getElementById('enterLedgerBtn').addEventListener('click', ()=>{
-  document.getElementById('ledgerPanel').scrollIntoView({ behavior:'smooth', block:'start' });
-});
-
-document.getElementById('openLensBtn').addEventListener('click', ()=>{
-  showToast("Market Lens: coming online.");
-});
-
-/* =========================
-   BOOT
-   ========================= */
-async function boot(isRefresh=false){
-  try{
-    await loadData();
-    UPDATED = UPDATED || (new Date()).toISOString().slice(0,10);
-    applyFilters();
-  }catch(e){
-    metaChip.textContent = "NO INDEX FOUND • Fix entries/_index.json or registry/index.json";
-    entryCount.textContent = "0";
-    grid.innerHTML = `
-      <div class="entry" style="grid-column: span 12;">
-        <div class="in">
-          <div class="name">Auto-index needs data.</div>
-          <div class="meta" style="margin-top:8px;">
-            Put one of these in the repo:
-            <br><br>
-            <b style="color:rgba(255,255,255,.82)">Option A (recommended):</b> <span style="color:rgba(255,255,255,.62)">registry/index.json</span>
-            <br>
-            <b style="color:rgba(255,255,255,.82)">Option B:</b> <span style="color:rgba(255,255,255,.62)">entries/_index.json</span> with a file list
-            <br><br>
-            <span style="color:rgba(255,255,255,.55)">${escapeHTML(String(e.message || e))}</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-}
-boot();
-
-/* =========================
-   PARTICLES (moving background)
-   Always behind content + logo. Never blocks clicks.
-   ========================= */
-const canvas = document.getElementById('particles');
-const ctx = canvas.getContext('2d');
-let W=0, H=0, DPR=1;
-let P=[];
-const N = 88;
-
-function resize(){
-  DPR = Math.min(2, window.devicePixelRatio || 1);
-  W = Math.floor(window.innerWidth);
-  H = Math.floor(window.innerHeight);
-  canvas.width = Math.floor(W * DPR);
-  canvas.height = Math.floor(H * DPR);
-  canvas.style.width = W + "px";
-  canvas.style.height = H + "px";
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-
-  if (!P.length){
-    for (let i=0;i<N;i++){
-      P.push({
-        x: Math.random()*W,
-        y: Math.random()*H,
-        vx: (Math.random()-.5)*0.22,
-        vy: (Math.random()-.5)*0.22,
-        r: 1 + Math.random()*1.6,
-        a: .18 + Math.random()*.22
-      });
+      document.getElementById("viewerCity").textContent = cityFromTz;
+      document.getElementById("viewerTz").textContent = viewerTz;
     }
-  }
-}
-window.addEventListener('resize', resize, { passive:true });
-resize();
 
-function line(a,b,alpha){
-  ctx.globalAlpha = alpha;
-  ctx.beginPath();
-  ctx.moveTo(a.x,a.y);
-  ctx.lineTo(b.x,b.y);
-  ctx.stroke();
-}
+    /**********************
+     * DATA LOADER (robust: tries multiple known paths)
+     **********************/
+    const pathsToTry = [
+      join("registry/index.json"),
+      join("registry/index.json?cachebust=" + Date.now()),
+      join("entries/_index.json"),
+      join("_index.json")
+    ];
 
-function frame(){
-  ctx.clearRect(0,0,W,H);
+    let REG = null;
+    let ENTRIES = [];
 
-  // dots
-  for (const p of P){
-    p.x += p.vx; p.y += p.vy;
-    if (p.x< -20) p.x = W+20;
-    if (p.x> W+20) p.x = -20;
-    if (p.y< -20) p.y = H+20;
-    if (p.y> H+20) p.y = -20;
-  }
+    async function fetchJson(url){
+      const res = await fetch(url, { cache:"no-store" });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    }
 
-  // glow field
-  const g = ctx.createRadialGradient(W*0.5,H*0.2, 0, W*0.5,H*0.2, Math.max(W,H));
-  g.addColorStop(0, "rgba(214,172,87,0.06)");
-  g.addColorStop(0.55, "rgba(110,180,255,0.03)");
-  g.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = g;
-  ctx.fillRect(0,0,W,H);
+    async function loadRegistry(){
+      const regEl = document.getElementById("regStatus");
+      const dataPathEl = document.getElementById("dataPath");
 
-  // lines
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "rgba(214,172,87,0.18)";
-  for (let i=0;i<P.length;i++){
-    for (let j=i+1;j<P.length;j++){
-      const a = P[i], b = P[j];
-      const dx = a.x-b.x, dy = a.y-b.y;
-      const d2 = dx*dx + dy*dy;
-      if (d2 < 140*140){
-        const d = Math.sqrt(d2);
-        const alpha = (1 - d/140) * 0.22;
-        line(a,b,alpha);
+      for (const p of pathsToTry){
+        try{
+          const j = await fetchJson(p);
+          // registry shape: { updated, entries:[...] }
+          if (j && Array.isArray(j.entries)){
+            REG = j;
+            ENTRIES = j.entries;
+            regEl.textContent = "Live (" + p.replace(ORIGIN,"").replace(/\?.*$/,"") + ")";
+            dataPathEl.textContent = "Data: " + p.replace(ORIGIN,"").replace(/\?.*$/,"");
+            return true;
+          }
+        }catch(e){}
+      }
+
+      // hard fail UI
+      regEl.textContent = "NO INDEX FOUND — expected /registry/index.json";
+      regEl.style.color = "rgba(255,95,120,.92)";
+      dataPathEl.textContent = "Data: NO INDEX FOUND";
+      ENTRIES = [];
+      return false;
+    }
+
+    /**********************
+     * UI RENDER
+     **********************/
+    const cardsEl = document.getElementById("cards");
+    const metaLineEl = document.getElementById("metaLine");
+
+    function badgeClass(status){
+      const s = (status||"").toLowerCase();
+      if (s === "verified") return "ok";
+      if (s === "flagged") return "bad";
+      if (s === "watch") return "warn";
+      return "warn"; // unverified default
+    }
+
+    function normalizeText(s){ return (s||"").toString().toLowerCase(); }
+
+    function matches(entry, q, status){
+      const text = [
+        entry.id, entry.name, entry.type, entry.jurisdiction, entry.scope, entry.status,
+        ...(entry.tags || []),
+        entry.summary
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      const okQ = !q || text.includes(q);
+      const okS = !status || normalizeText(entry.status) === status;
+      return okQ && okS;
+    }
+
+    function safeArray(x){ return Array.isArray(x) ? x : []; }
+
+    function render(){
+      const q = normalizeText(document.getElementById("q").value.trim());
+      const status = normalizeText(document.getElementById("statusFilter").value.trim());
+
+      const filtered = ENTRIES.filter(e => matches(e, q, status));
+
+      document.getElementById("entryCount").textContent = ENTRIES.length.toString();
+      metaLineEl.textContent = `Entries: ${filtered.length} • Updated: ${(REG && REG.updated) ? REG.updated : "—"}`;
+
+      cardsEl.innerHTML = "";
+
+      if (!filtered.length){
+        const empty = document.createElement("div");
+        empty.className = "sub";
+        empty.style.marginTop = "12px";
+        empty.style.color = "rgba(255,255,255,.55)";
+        empty.textContent = "No matches. Change filters or search.";
+        cardsEl.appendChild(empty);
+        return;
+      }
+
+      for (const e of filtered){
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const badge = document.createElement("div");
+        badge.className = "badge " + badgeClass(e.status);
+        badge.textContent = (e.status || "unverified").toUpperCase();
+        card.appendChild(badge);
+
+        const idline = document.createElement("div");
+        idline.className = "idline";
+        idline.textContent = e.id || "—";
+        card.appendChild(idline);
+
+        const name = document.createElement("h2");
+        name.className = "name";
+        name.textContent = e.name || "Untitled";
+        card.appendChild(name);
+
+        const desc = document.createElement("div");
+        desc.className = "desc";
+        desc.textContent = e.summary || `${e.type || "Entity"} • ${e.jurisdiction || "—"} • ${e.scope || "—"}`;
+        card.appendChild(desc);
+
+        const tags = document.createElement("div");
+        tags.className = "tags";
+        const t = safeArray(e.tags).slice(0, 6);
+        for (const tag of t){
+          const el = document.createElement("span");
+          el.className = "tag";
+          el.textContent = tag;
+          tags.appendChild(el);
+        }
+        card.appendChild(tags);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+
+        const openBtn = document.createElement("button");
+        openBtn.className = "btn small gold";
+        openBtn.textContent = "OPEN";
+        openBtn.onclick = () => openEntry(e);
+
+        const citeBtn = document.createElement("button");
+        citeBtn.className = "btn small";
+        citeBtn.textContent = "COPY CITATION";
+        citeBtn.onclick = () => copyCitation(e);
+
+        const srcBtn = document.createElement("button");
+        srcBtn.className = "btn small ghost";
+        srcBtn.textContent = "SOURCE";
+        srcBtn.onclick = () => {
+          if (e.source_url) window.open(e.source_url, "_blank", "noopener,noreferrer");
+        };
+
+        actions.appendChild(openBtn);
+        actions.appendChild(citeBtn);
+        actions.appendChild(srcBtn);
+
+        card.appendChild(actions);
+
+        cardsEl.appendChild(card);
       }
     }
-  }
 
-  // dots
-  for (const p of P){
-    ctx.globalAlpha = p.a;
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fill();
-  }
+    /**********************
+     * ENTRY VIEWER (renders markdown INSIDE the UI)
+     **********************/
+    const modal = document.getElementById("modal");
+    const modalMd = document.getElementById("modalMd");
+    const modalName = document.getElementById("modalName");
+    const modalMeta = document.getElementById("modalMeta");
+    const modalSourceBtn = document.getElementById("modalSourceBtn");
+    const modalCopyBtn = document.getElementById("modalCopyBtn");
 
-  requestAnimationFrame(frame);
-}
-frame();
-</script>
+    function openModal(){ modal.classList.add("open"); }
+    function closeModal(){ modal.classList.remove("open"); }
+    document.getElementById("modalCloseBtn").onclick = closeModal;
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+    async function openEntry(e){
+      modalName.textContent = e.name || "Entry";
+      modalMeta.textContent = `${e.id || "—"} • ${e.jurisdiction || "—"} • ${e.type || "—"}`;
+      modalMd.innerHTML = "<div class='sub' style='color:rgba(255,255,255,.62)'>Loading record…</div>";
+      modalSourceBtn.onclick = () => { if (e.source_url) window.open(e.source_url, "_blank", "noopener,noreferrer"); };
+      modalCopyBtn.onclick = () => copyCitation(e);
+      openModal();
+
+      const path = (e.entry_path || "").trim();
+      if (!path){
+        modalMd.innerHTML = "<div class='sub' style='color:rgba(255,95,120,.85)'>No entry_path defined for this record.</div>";
+        return;
+      }
+
+      // entry_path is stored like "./entries/FILE.md" — make it work under basePath
+      const resolved = join(path.replace(/^\.\//,""));
+
+      try{
+        const res = await fetch(resolved, { cache:"no-store" });
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        const md = await res.text();
+        const html = window.marked.parse(md);
+        modalMd.innerHTML = html;
+      }catch(err){
+        modalMd.innerHTML =
+          `<div class="sub" style="color:rgba(255,95,120,.85)">
+            Failed to load entry.<br/>
+            <code style="font-family:var(--mono)">${resolved}</code>
+          </div>`;
+      }
+    }
+
+    function copyCitation(e){
+      const pattern =
+`APEX OMPC/ATA Citation
+ID: ${e.id || "—"}
+Entity: ${e.name || "—"}
+Jurisdiction: ${e.jurisdiction || "—"}
+Source: ${e.source_url || "—"}
+Registry: ${ORIGIN + basePath} (data: ${document.getElementById("dataPath").textContent.replace("Data: ","")})
+Retrieved: ${new Date().toISOString()}`;
+
+      navigator.clipboard.writeText(pattern).then(() => toast("Citation copied."));
+    }
+
+    /**********************
+     * TOAST (tiny feedback)
+     **********************/
+    let toastTimer = null;
+    function toast(msg){
+      let t = document.getElementById("toast");
+      if(!t){
+        t = document.createElement("div");
+        t.id = "toast";
+        t.style.position = "fixed";
+        t.style.left = "50%";
+        t.style.bottom = "22px";
+        t.style.transform = "translateX(-50%)";
+        t.style.background = "rgba(10,12,18,.75)";
+        t.style.border = "1px solid rgba(255,255,255,.12)";
+        t.style.padding = "10px 12px";
+        t.style.borderRadius = "999px";
+        t.style.backdropFilter = "blur(12px)";
+        t.style.boxShadow = "0 20px 80px rgba(0,0,0,.65)";
+        t.style.color = "rgba(255,255,255,.88)";
+        t.style.fontSize = "12px";
+        t.style.zIndex = "200";
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.opacity = "1";
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { t.style.opacity = "0"; }, 1300);
+    }
+
+    /**********************
+     * NAV / BUTTONS
+     **********************/
+    document.getElementById("year").textContent = new Date().getFullYear().toString();
+
+    document.getElementById("repoBtn").onclick = () => {
+      // open repo root relative
+      const repoUrl = "https://github.com/" + (location.hostname.includes("github.io") ? location.hostname.split(".")[0] : "") + "/ompc-1";
+      window.open(repoUrl, "_blank", "noopener,noreferrer");
+    };
+
+    document.getElementById("copyPatternBtn").onclick = () => {
+      const pattern =
+`Citation Pattern
+ID: ATA-YYYY-NNNN
+Entity: <Company>
+Source: <Public URL>
+Registry: ${ORIGIN + basePath}
+Retrieved: <ISO time>`;
+      navigator.clipboard.writeText(pattern).then(() => toast("Pattern copied."));
+    };
+
+    document.getElementById("copySiteLinkBtn").onclick = () => {
+      navigator.clipboard.writeText(ORIGIN + basePath).then(() => toast("Site link copied."));
+    };
+
+    document.getElementById("refreshBtn").onclick = async () => {
+      toast("Refreshing…");
+      await boot(true);
+    };
+
+    // Tabs
+    const ledgerPanel = document.getElementById("ledgerPanel");
+    const lensPanel = document.getElementById("lensPanel");
+    const pricingPanel = document.getElementById("pricingPanel");
+    const contactPanel = document.getElementById("contactPanel");
+
+    function show(panel){
+      ledgerPanel.style.display = (panel==="ledger") ? "" : "none";
+      lensPanel.style.display = (panel==="lens") ? "" : "none";
+      pricingPanel.style.display = (panel==="pricing") ? "" : "none";
+      contactPanel.style.display = (panel==="contact") ? "" : "none";
+      document.getElementById("lensMode").textContent = (panel==="lens") ? "Lens" : "Surface";
+      window.scrollTo({ top: 0, behavior:"smooth" });
+    }
+
+    document.getElementById("tabLedger").onclick = () => show("ledger");
+    document.getElementById("tabLens").onclick = () => show("lens");
+    document.getElementById("tabPricing").onclick = () => show("pricing");
+    document.getElementById("tabContact").onclick = () => show("contact");
+
+    document.getElementById("enterLedgerBtn").onclick = () => show("ledger");
+    document.getElementById("openLensBtn").onclick = () => show("lens");
+
+    document.getElementById("lensCTA").onclick = () => { show("contact"); toast("Copy the access request template."); };
+    document.getElementById("lensDemo").onclick = () => toast("Demo pattern shown below. Outputs only.");
+    document.getElementById("pricingEnter").onclick = () => show("ledger");
+    document.getElementById("pricingAccess").onclick = () => show("contact");
+    document.getElementById("pricingCopy").onclick = () => {
+      navigator.clipboard.writeText("Subject: APEX Market Lens — Access Request").then(()=>toast("Copied."));
+    };
+    document.getElementById("contactCopy").onclick = () => {
+      const txt =
+`Subject: APEX Market Lens — Access Request
+- Organization:
+- Use-case:
+- Entities of interest:
+- Region / jurisdiction:
+- Required cadence:`;
+      navigator.clipboard.writeText(txt).then(()=>toast("Template copied."));
+    };
+
+    // Search handlers
+    document.getElementById("q").addEventListener("input", render);
+    document.getElementById("statusFilter").addEventListener("change", render);
+
+    /**********************
+     * PARTICLES (high quality + mobile safe)
+     **********************/
+    const canvas = document.getElementById("particles");
+    const ctx = canvas.getContext("2d", { alpha:true });
+
+    let W=0,H=0,DPR=1;
+    let particles = [];
+    let mouse = { x: 0.5, y: 0.5, active:false };
+
+    function resize(){
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = Math.floor(window.innerWidth);
+      H = Math.floor(window.innerHeight);
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+
+    function initParticles(){
+      const count = Math.floor(Math.min(160, Math.max(70, (W*H)/14000)));
+      particles = new Array(count).fill(0).map(()=>({
+        x: rand(0,W),
+        y: rand(0,H),
+        vx: rand(-0.18, 0.18),
+        vy: rand(-0.10, 0.14),
+        r: rand(0.8, 2.0),
+        a: rand(0.18, 0.72),
+        tw: rand(0, Math.PI*2),
+      }));
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+
+      // motion field
+      const mx = mouse.active ? mouse.x : 0.5;
+      const my = mouse.active ? mouse.y : 0.5;
+
+      // particles
+      for (const p of particles){
+        p.tw += 0.012;
+        p.x += p.vx + (mx - 0.5) * 0.08;
+        p.y += p.vy + (my - 0.5) * 0.05;
+
+        // wrap
+        if (p.x < -30) p.x = W + 30;
+        if (p.x > W + 30) p.x = -30;
+        if (p.y < -30) p.y = H + 30;
+        if (p.y > H + 30) p.y = -30;
+
+        const pulse = (Math.sin(p.tw) + 1) * 0.12;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r + pulse, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,199,92,${p.a})`;
+        ctx.fill();
+      }
+
+      // lines
+      for (let i=0;i<particles.length;i++){
+        for (let j=i+1;j<particles.length;j++){
+          const a = particles[i], b = particles[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 < 160*160){
+            const d = Math.sqrt(d2);
+            const alpha = (1 - d/160) * 0.10;
+            ctx.strokeStyle = `rgba(255,199,92,${alpha})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener("mousemove", (e)=>{
+      mouse.x = e.clientX / Math.max(1, W);
+      mouse.y = e.clientY / Math.max(1, H);
+      mouse.active = true;
+    }, { passive:true });
+
+    window.addEventListener("touchmove", (e)=>{
+      const t = e.touches && e.touches[0];
+      if(!t) return;
+      mouse.x = t.clientX / Math.max(1, W);
+      mouse.y = t.clientY / Math.max(1, H);
+      mouse.active = true;
+    }, { passive:true });
+
+    window.addEventListener("mouseleave", ()=> mouse.active=false);
+
+    /**********************
+     * BOOT
+     **********************/
+    async function boot(force=false){
+      document.getElementById("viewerLocale").textContent = viewerLocale;
+      document.getElementById("viewerTz").textContent = viewerTz;
+      document.getElementById("viewerCity").textContent = cityFromTz;
+
+      // live clock
+      tick();
+      if (!window.__clockInt){
+        window.__clockInt = setInterval(tick, 1000);
+      }
+
+      // try better city/timezone (best effort)
+      tryCity();
+
+      // load registry
+      await loadRegistry();
+
+      // UI meta
+      if (REG && REG.updated){
+        document.getElementById("metaLine").textContent = `Entries: ${ENTRIES.length} • Updated: ${REG.updated}`;
+      }else{
+        document.getElementById("metaLine").textContent = `Entries: ${ENTRIES.length} • Updated: —`;
+      }
+
+      render();
+      toast(force ? "Refreshed." : "Ready.");
+    }
+
+    // Start particles
+    resize();
+    initParticles();
+    draw();
+    window.addEventListener("resize", ()=>{ resize(); initParticles(); }, { passive:true });
+
+    // Start app
+    boot(false);
+  </script>
 </body>
 </html>
