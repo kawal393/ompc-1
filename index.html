@@ -1,314 +1,1513 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-AU">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark">
-<title>APEX — OMPC / ATA</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>APEX — OMPC / ATA</title>
 
-<!-- City detection (no backend, client-side only) -->
-<script src="https://cdn.jsdelivr.net/gh/bigdatacloudapi/js-reverse-geocode-client@latest/bigdatacloud_reverse_geocode.min.js"></script>
+  <style>
+    :root{
+      --bg0:#050607;
+      --bg1:#07090b;
+      --panel: rgba(14,16,19,.72);
+      --panel2: rgba(10,12,15,.55);
+      --stroke: rgba(255,255,255,.08);
+      --stroke2: rgba(210,178,93,.24);
+      --text:#e9edf3;
+      --muted:#aeb7c2;
+      --muted2:#7f8a97;
+      --gold:#d2b25d;
+      --gold2:#f2d88c;
+      --blue:#77b6ff;
+      --shadow: 0 22px 70px rgba(0,0,0,.55);
+      --shadow2: 0 12px 40px rgba(0,0,0,.52);
+      --radius: 18px;
+      --radius2: 26px;
+      --max: 1120px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --tiltX: 0deg;
+      --tiltY: 0deg;
+      --glow: .0;
+      --wmOpacity: .32;
+    }
 
-<style>
-:root{
-  --bg0:#050607; --bg1:#07090b;
-  --panel:rgba(14,16,19,.75);
-  --stroke:rgba(255,255,255,.08);
-  --text:#e9edf3; --muted:#aeb7c2;
-  --gold:#d2b25d; --blue:#77b6ff;
-  --radius:18px; --radius2:26px;
-  --max:1120px;
-  --mono:ui-monospace,Menlo,Consolas,monospace;
-  --sans:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%}
-body{
-  font-family:var(--sans);
-  color:var(--text);
-  background:
-    radial-gradient(900px 500px at 50% 10%, rgba(210,178,93,.15), transparent 60%),
-    radial-gradient(800px 600px at 20% 40%, rgba(120,190,255,.10), transparent 65%),
-    linear-gradient(180deg,var(--bg0),var(--bg1));
-  overflow-x:hidden;
-}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 55% 10%, rgba(210,178,93,.14), transparent 55%),
+        radial-gradient(920px 520px at 20% 35%, rgba(120,190,255,.10), transparent 55%),
+        radial-gradient(1100px 760px at 50% 120%, rgba(210,178,93,.09), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
 
-/* PARTICLES */
-#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+    /* PARTICLES */
+    #bg{
+      position:fixed; inset:0;
+      z-index:0;
+      pointer-events:none;
+      opacity:1;
+    }
 
-/* BIG SIGIL */
-.sigil{
-  position:fixed; inset:-15%;
-  display:grid; place-items:center;
-  z-index:1; pointer-events:none;
-  opacity:.22; mix-blend-mode:screen;
-}
-.sigil img{
-  width:min(90vw,900px);
-  filter:drop-shadow(0 0 40px rgba(210,178,93,.25));
-}
+    /* AURA */
+    .sigilAura{
+      position:fixed; inset:0;
+      z-index:1;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.16), transparent 62%),
+        radial-gradient(800px 520px at 50% 60%, rgba(0,0,0,.18), transparent 60%);
+      mix-blend-mode:screen;
+      opacity:.55;
+    }
 
-/* CONTENT */
-.wrap{position:relative;z-index:2;max-width:var(--max);margin:auto;padding:24px}
+    /* BIG WATERMARK */
+    .watermark{
+      position:fixed;
+      inset:0;
+      z-index:1;
+      pointer-events:none;
+      display:grid;
+      place-items:center;
+      opacity: var(--wmOpacity);
+      filter: saturate(1.05) contrast(1.05);
+      transform: translateZ(0);
+    }
+    .watermark img{
+      width:min(92vw, 920px);
+      max-width:920px;
+      height:auto;
+      opacity:1;
+      filter: drop-shadow(0 30px 120px rgba(0,0,0,.65));
+      transform:
+        perspective(900px)
+        rotateX(var(--tiltX))
+        rotateY(var(--tiltY))
+        scale(1.02);
+      transition: opacity .25s ease;
+      will-change: transform;
+    }
+    .watermark:after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 520px at 50% 65%, rgba(210,178,93,.10), transparent 60%),
+        radial-gradient(900px 520px at 40% 55%, rgba(120,190,255,.06), transparent 60%);
+      opacity:.85;
+      mix-blend-mode:screen;
+    }
 
-/* TOP BAR */
-.topbar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:10px 14px;border:1px solid var(--stroke);
-  border-radius:999px;background:rgba(0,0,0,.35);
-  backdrop-filter:blur(10px)
-}
-.brand{display:flex;gap:12px;align-items:center}
-.logo{width:42px;height:42px;border-radius:50%;overflow:hidden;border:1px solid rgba(210,178,93,.35)}
-.logo img{width:100%;height:100%;object-fit:cover}
-.kicker{font-size:12px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
-.sub{font-size:12px;color:var(--muted)}
-.actions{display:flex;gap:8px}
-.btn{
-  border:1px solid rgba(210,178,93,.25);
-  background:rgba(0,0,0,.25);
-  color:var(--text);padding:8px 12px;
-  border-radius:999px;font-size:12px;
-  cursor:pointer;text-transform:uppercase;
-}
-.btn.gold{background:rgba(210,178,93,.18)}
-.btn:hover{background:rgba(210,178,93,.25)}
+    /* LAYOUT */
+    .wrap{
+      position:relative;
+      z-index:2;
+      max-width:var(--max);
+      margin:0 auto;
+      padding:24px 18px 60px;
+    }
 
-/* HERO */
-.hero{
-  margin-top:18px;padding:22px;border-radius:var(--radius2);
-  border:1px solid var(--stroke);
-  background:rgba(0,0,0,.35);
-}
-.hero h1{margin:0;font-size:40px;line-height:1.05}
-.hero p{max-width:65ch;color:var(--muted)}
-.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.stat{font-size:12px;padding:6px 10px;border-radius:999px;
-  background:rgba(0,0,0,.25);border:1px solid var(--stroke)
-}
+    /* TOP BAR */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      border-radius:999px;
+      background: rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+    }
 
-/* NAV */
-.tabs{display:flex;gap:8px;margin-top:14px}
-.tab{padding:8px 12px;border-radius:999px;border:1px solid var(--stroke);
-  background:rgba(0,0,0,.25);cursor:pointer;font-size:12px}
-.tab.active{background:rgba(210,178,93,.18)}
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 0;
+    }
 
-/* LEDGER */
-.toolbar{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.search{flex:1;border:1px solid var(--stroke);border-radius:999px;padding:8px 12px;background:rgba(0,0,0,.25)}
-.search input{background:none;border:0;color:var(--text);width:100%}
-.grid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .logo{
+      width:42px; height:42px;
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid rgba(210,178,93,.28);
+      box-shadow: 0 0 0 1px rgba(0,0,0,.35) inset, 0 10px 30px rgba(0,0,0,.45);
+      position:relative;
+      flex:0 0 auto;
+      background: radial-gradient(circle at 30% 30%, rgba(242,216,140,.18), rgba(0,0,0,.45));
+    }
 
-.card{
-  padding:12px;border-radius:var(--radius);
-  background:rgba(0,0,0,.30);border:1px solid var(--stroke)
-}
-.id{font-family:var(--mono);font-size:11px;color:var(--gold)}
-.name{font-weight:600}
-.badge{font-size:11px;color:var(--gold)}
-.cardActions{display:flex;gap:6px;margin-top:8px}
-.mini{font-size:11px;padding:6px 10px;border-radius:999px;border:1px solid var(--stroke);
-  background:rgba(0,0,0,.25);cursor:pointer}
+    .logo img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+      transform: scale(1.04);
+    }
 
-/* MARKET LENS */
-#lens{display:none;margin-top:16px}
-#lens.open{display:block}
-pre{font-family:var(--mono);font-size:12px;color:var(--text)}
+    .brandText{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .brandText .kicker{
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:rgba(210,178,93,.92);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brandText .sub{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
 
-/* MODAL */
-.modal{position:fixed;inset:0;display:none;place-items:center;
-  background:rgba(0,0,0,.7);z-index:9}
-.modal.open{display:grid}
-.modalBox{background:#0b0d10;border-radius:18px;padding:16px;
-  max-width:900px;width:90%;max-height:85vh;overflow:auto}
+    .topActions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
 
-.footer{text-align:center;margin:20px 0;font-size:12px;color:var(--muted)}
-</style>
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,12,14,.55);
+      color:var(--text);
+      font-size:12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.30);
+      backdrop-filter: blur(8px);
+      user-select:none;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;background: #3aff85;
+      box-shadow: 0 0 14px rgba(58,255,133,.55);
+    }
+
+    .btn{
+      cursor:pointer;
+      appearance:none;
+      border:1px solid rgba(210,178,93,.18);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:999px;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+      box-shadow: 0 12px 30px rgba(0,0,0,.32);
+      backdrop-filter: blur(10px);
+      white-space:nowrap;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(210,178,93,.45);
+      box-shadow: 0 18px 44px rgba(0,0,0,.48);
+      background: rgba(210,178,93,.08);
+    }
+    .btn:active{transform: translateY(0px) scale(.99)}
+    .btn.gold{
+      border-color: rgba(210,178,93,.42);
+      background: linear-gradient(180deg, rgba(210,178,93,.18), rgba(0,0,0,.12));
+    }
+
+    /* HERO */
+    .hero{
+      margin-top:18px;
+      border-radius: var(--radius2);
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(12,14,16,.72), rgba(9,10,12,.55));
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.18), transparent 60%),
+        radial-gradient(780px 520px at 20% 50%, rgba(120,190,255,.10), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      opacity:.78;
+      pointer-events:none;
+    }
+    .heroInner{
+      position:relative;
+      padding:22px 18px 18px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+    @media (max-width: 860px){
+      .heroInner{grid-template-columns: 1fr}
+    }
+
+    .hTitle{
+      font-size: 44px;
+      line-height:1.02;
+      margin:0 0 10px 0;
+      letter-spacing:-.02em;
+      text-shadow: 0 20px 90px rgba(0,0,0,.60);
+    }
+    @media (max-width: 520px){
+      .hTitle{font-size: 34px}
+    }
+    .hSub{
+      margin:0 0 14px 0;
+      color:var(--muted);
+      max-width:62ch;
+      font-size: 14px;
+      line-height:1.55;
+    }
+    .ctaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:10px;
+    }
+
+    .panelGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .panel{
+      border:1px solid rgba(255,255,255,.09);
+      background: rgba(0,0,0,.22);
+      border-radius: var(--radius);
+      padding:12px 12px;
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      position:relative;
+      overflow:hidden;
+      transform-style: preserve-3d;
+    }
+    .panel:before{
+      content:"";
+      position:absolute; inset:-1px;
+      border-radius: inherit;
+      pointer-events:none;
+      background: radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.15), transparent 62%);
+      opacity:.65;
+    }
+    .panel h3{
+      margin:0 0 6px 0;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(210,178,93,.95);
+      position:relative;
+    }
+    .panel p{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
+      color: var(--muted);
+      position:relative;
+    }
+
+    .statRow{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      position:relative;
+    }
+    .stat{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      color:var(--muted);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.22);
+    }
+    .stat b{color: var(--text); font-weight:650}
+
+    /* MODE STRIP */
+    .modeStrip{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .modeTab{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:999px;
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      backdrop-filter: blur(10px);
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    }
+    .modeTab.active{
+      border-color: rgba(210,178,93,.45);
+      background: rgba(210,178,93,.10);
+      box-shadow: 0 18px 44px rgba(0,0,0,.48);
+    }
+    .modeTab:hover{transform: translateY(-1px)}
+
+    /* TOOLBAR */
+    .toolbar{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search{
+      flex: 1 1 340px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      border-radius:999px;
+      padding:10px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+      min-width:0;
+    }
+    .search input{
+      flex:1;
+      background: transparent;
+      border:0;
+      outline:none;
+      color:var(--text);
+      font-size:13px;
+      min-width: 0;
+    }
+    .search .hint{color:var(--muted2); font-size:12px; white-space:nowrap}
+    .select{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+      outline:none;
+      cursor:pointer;
+    }
+
+    /* CONTENT MODES */
+    .mode{
+      display:none;
+      margin-top:12px;
+    }
+    .mode.active{
+      display:block;
+    }
+
+    /* CARDS */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+    @media (max-width: 860px){
+      .grid{grid-template-columns: 1fr}
+    }
+    .card{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      border-radius: var(--radius);
+      padding:12px 12px 10px;
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      position:relative;
+      overflow:hidden;
+      transform-style: preserve-3d;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      will-change: transform;
+    }
+    .card:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(780px 360px at 30% 0%, rgba(210,178,93,.15), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      opacity:.65;
+      pointer-events:none;
+    }
+    .card:hover{
+      transform: translateY(-4px) perspective(900px) rotateX(2deg) rotateY(-2deg);
+      box-shadow: 0 26px 90px rgba(0,0,0,.62);
+      border-color: rgba(210,178,93,.26);
+    }
+
+    .metaTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      position:relative;
+    }
+    .id{
+      font-family: var(--mono);
+      font-size:12px;
+      color: rgba(210,178,93,.9);
+      letter-spacing:.06em;
+    }
+    .badge{
+      font-size:11px;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      color: var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.1em;
+      white-space:nowrap;
+    }
+    .badge.verified{
+      border-color: rgba(58,255,133,.28);
+      color: rgba(170,255,205,.95);
+      background: rgba(58,255,133,.08);
+      box-shadow: 0 0 18px rgba(58,255,133,.12);
+    }
+    .badge.published{
+      border-color: rgba(210,178,93,.25);
+      color: rgba(242,216,140,.95);
+      background: rgba(210,178,93,.08);
+      box-shadow: 0 0 18px rgba(210,178,93,.12);
+    }
+
+    .name{
+      margin:8px 0 2px;
+      font-size:16px;
+      font-weight:650;
+      position:relative;
+    }
+    .summary{
+      margin:0 0 10px;
+      font-size:12px;
+      line-height:1.45;
+      color: var(--muted);
+      position:relative;
+      max-width: 70ch;
+    }
+    .tags{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin: 0 0 10px;
+      position:relative;
+    }
+    .tag{
+      font-size:11px;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+    }
+
+    .cardActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      position:relative;
+    }
+    .mini{
+      cursor:pointer;
+      border:1px solid rgba(210,178,93,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:11px;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    }
+    .mini:hover{
+      transform: translateY(-1px);
+      border-color: rgba(210,178,93,.45);
+      background: rgba(210,178,93,.08);
+      box-shadow: 0 16px 40px rgba(0,0,0,.45);
+    }
+
+    /* LENS */
+    .lensBox{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      border-radius: var(--radius2);
+      padding:12px;
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      position:relative;
+      overflow:hidden;
+    }
+    .lensHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .lensHead b{
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      font-size:12px;
+      color: rgba(210,178,93,.95);
+    }
+    .lensActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    pre.out{
+      margin:0;
+      font-family: var(--mono);
+      font-size:12px;
+      line-height:1.55;
+      color:#e9edf3;
+      white-space:pre-wrap;
+      word-break:break-word;
+      min-height: 120px;
+      max-height: 56vh;
+      overflow:auto;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      padding:10px;
+      background: rgba(0,0,0,.28);
+    }
+    .lensNote{
+      margin-top:10px;
+      font-size:12px;
+      color: var(--muted);
+      line-height:1.45;
+    }
+
+    /* FOOTER */
+    .foot{
+      margin-top:18px;
+      padding:14px 10px;
+      color: var(--muted2);
+      font-size:12px;
+      text-align:center;
+    }
+
+    /* MODAL VIEWER */
+    .modal{
+      position:fixed; inset:0;
+      z-index:50;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      background: rgba(0,0,0,.70);
+      backdrop-filter: blur(10px);
+    }
+    .modal.open{display:flex}
+    .modalCard{
+      width:min(980px, 100%);
+      max-height: min(86vh, 820px);
+      border-radius: 22px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,12,14,.80);
+      box-shadow: 0 30px 120px rgba(0,0,0,.70);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      position:relative;
+    }
+    .modalCard:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.18), transparent 60%),
+        radial-gradient(700px 500px at 20% 60%, rgba(120,190,255,.12), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .modalHead{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+    }
+    .modalTitle{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .modalTitle b{
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .modalTitle span{
+      font-family: var(--mono);
+      font-size:12px;
+      color: rgba(210,178,93,.92);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .modalBody{
+      position:relative;
+      padding:12px;
+      overflow:auto;
+    }
+    pre.viewer{
+      margin:0;
+      font-family: var(--mono);
+      font-size:12px;
+      line-height:1.55;
+      color: #e9edf3;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .closeX{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      color:var(--text);
+      width:40px; height:40px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      font-size:16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    }
+
+    /* TOAST */
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      z-index:80;
+      display:none;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(210,178,93,.20);
+      background: rgba(0,0,0,.55);
+      color: var(--text);
+      font-size:12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.50);
+      backdrop-filter: blur(10px);
+      max-width: min(90vw, 720px);
+      text-align:center;
+    }
+    .toast.show{display:block}
+
+    /* small safety for notches */
+    @supports(padding: max(0px)){
+      .wrap{ padding-top: max(24px, env(safe-area-inset-top)); }
+    }
+  </style>
 </head>
 
 <body>
-<canvas id="bg"></canvas>
+  <canvas id="bg"></canvas>
+  <div class="sigilAura"></div>
+  <div class="watermark" aria-hidden="true">
+    <img id="wmImg" alt="" />
+  </div>
 
-<div class="sigil">
-  <img src="./apex-sigil.png" alt="">
-</div>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-label="APEX Sigil">
+          <img id="logoImg" alt="APEX" />
+        </div>
+        <div class="brandText">
+          <div class="kicker">APEX — OMPC / ATA</div>
+          <div class="sub">Authority Registry • Claims vs Reality • Market Lens</div>
+        </div>
+      </div>
 
-<div class="wrap">
+      <div class="topActions">
+        <div class="pill"><span class="dot"></span> LIVE SURFACE</div>
+        <button class="btn" id="btnRepo">Repo</button>
+        <button class="btn gold" id="btnCopyPattern">Copy Citation Pattern</button>
+      </div>
+    </div>
 
-<div class="topbar">
-  <div class="brand">
-    <div class="logo"><img src="./apex-sigil.png"></div>
-    <div>
-      <div class="kicker">APEX — OMPC / ATA</div>
-      <div class="sub">Authority Registry · Market Lens</div>
+    <section class="hero" id="top">
+      <div class="heroInner">
+        <div>
+          <h1 class="hTitle">Authority you can cite.<br/>Evidence you can anchor.</h1>
+          <p class="hSub">
+            Public attestation ledger (ATA/OMPC style) plus a second layer that converts records into structured intelligence:
+            contradictions, catalysts, timelines, watchlists. Clean. Calm. Weapon-grade.
+          </p>
+
+          <div class="ctaRow">
+            <button class="btn gold" id="btnEnter">Enter Ledger</button>
+            <button class="btn" id="btnLens">Open Market Lens</button>
+            <button class="btn" id="btnRefresh">Force Refresh</button>
+          </div>
+
+          <div class="statRow" style="margin-top:12px">
+            <div class="stat">Registry: <b id="statRegistry">Loading…</b></div>
+            <div class="stat">Entries: <b id="statEntries">0</b></div>
+            <div class="stat">Viewer: <b id="statViewer">Locating…</b></div>
+            <div class="stat">Timezone: <b id="statTZ">—</b></div>
+            <div class="stat">Locale: <b id="statLocale">—</b></div>
+          </div>
+
+          <div class="modeStrip" aria-label="Mode">
+            <button class="modeTab active" id="tabLedger">Ledger</button>
+            <button class="modeTab" id="tabMarket">Market Lens</button>
+          </div>
+        </div>
+
+        <div class="panelGrid">
+          <div class="panel">
+            <h3>Market Lens (Paid Layer)</h3>
+            <p>
+              The ledger stays public; the lens becomes the product. We surface contradictions + catalysts and emit
+              watchlists without exposing internal mechanics.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Mismatch Watch</h3>
+            <p>
+              Detect claims drifting from reality. Convert public statements into structured signals (watchlist outputs).
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Client-Safe Viewer</h3>
+            <p>
+              Entries open inside this site (modal). No raw GitHub pages; no 404 leakage. The client never sees backend paths.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEDGER MODE -->
+    <div class="mode active" id="modeLedger">
+      <div class="toolbar" id="ledger">
+        <div class="search">
+          <span style="opacity:.8">🔎</span>
+          <input id="q" placeholder="Search: company, tags, ID, jurisdiction…" />
+          <span class="hint" id="hint">Ready</span>
+        </div>
+
+        <select class="select" id="statusFilter">
+          <option value="all">Status: All</option>
+          <option value="verified">Verified</option>
+          <option value="published">Published</option>
+          <option value="unverified">Unverified</option>
+        </select>
+
+        <select class="select" id="tagFilter">
+          <option value="all">Tag: All</option>
+        </select>
+      </div>
+
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <!-- MARKET LENS MODE -->
+    <div class="mode" id="modeMarket">
+      <div class="lensBox">
+        <div class="lensHead">
+          <div>
+            <b>Market Lens — Surface Mode</b>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">
+              Output is generated from public registry data. No internal mechanics exposed.
+            </div>
+          </div>
+          <div class="lensActions">
+            <button class="btn gold" id="btnRunLens">Run Lens</button>
+            <button class="btn" id="btnCopyWatch">Copy Watchlist</button>
+            <button class="btn" id="btnBackLedger">Back</button>
+          </div>
+        </div>
+
+        <pre class="out" id="lensOut">Press “Run Lens” to generate a client-safe watchlist from registry/index.json…</pre>
+
+        <div class="lensNote">
+          <b style="color:rgba(210,178,93,.9)">Impossibility Clause:</b>
+          This registry is recorded as-is at fixed points in time. New information requires a new entry ID. Authority accumulates; it doesn’t rewrite.
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      © <span id="year"></span> APEX • OMPC / ATA Surface • <span id="footSrc">registry/index.json</span> • entries/*.md
     </div>
   </div>
-  <div class="actions">
-    <button class="btn" onclick="openRepo()">Repo</button>
-    <button class="btn gold" onclick="copyPattern()">Copy Citation</button>
-  </div>
-</div>
 
-<div class="hero">
-  <h1>Authority you can cite.<br>Evidence you can anchor.</h1>
-  <p>Public attestation ledger with a second intelligence layer that converts claims into structured signals.</p>
-  <div class="stats">
-    <div class="stat">Registry: <b id="statReg">—</b></div>
-    <div class="stat">Entries: <b id="statCount">0</b></div>
-    <div class="stat">Viewer: <b id="statCity">Locating…</b></div>
-    <div class="stat">Timezone: <b id="statTZ">—</b></div>
-  </div>
-  <div class="tabs">
-    <div class="tab active" onclick="showLedger(this)">Ledger</div>
-    <div class="tab" onclick="showLens(this)">Market Lens</div>
-  </div>
-</div>
-
-<div id="ledger">
-  <div class="toolbar">
-    <div class="search"><input id="q" placeholder="Search company, tag, ID…"></div>
-  </div>
-  <div class="grid" id="grid"></div>
-</div>
-
-<div id="lens">
-  <div class="toolbar">
-    <button class="btn gold" onclick="runLens()">Run Lens</button>
-    <button class="btn" onclick="copyLens()">Copy Watchlist</button>
-    <button class="btn" onclick="backToLedger()">Back</button>
-  </div>
-  <pre id="lensOut">Press “Run Lens”.</pre>
-</div>
-
-<div class="footer">© APEX · OMPC / ATA Surface</div>
-
-</div>
-
-<div class="modal" id="modal">
-  <div class="modalBox">
-    <button class="btn" onclick="closeModal()">Close</button>
-    <pre id="modalBody"></pre>
-  </div>
-</div>
-
-<script>
-/* ---------- CORE ---------- */
-const state={entries:[],watch:null};
-const $=id=>document.getElementById(id);
-
-/* BASE PATH */
-const BASE=location.pathname.split("/")[1]?"/"+location.pathname.split("/")[1]+"/":"/";
-const url=p=>new URL(p.replace(/^\//,""),location.origin+BASE);
-
-/* LOAD REGISTRY */
-async function load(){
-  const r=await fetch(url("registry/index.json"));
-  const j=await r.json();
-  state.entries=j.entries.map(e=>({
-    ...e,status:e.status==="verified"?"verified":"published"
-  }));
-  $("statReg").textContent="registry/index.json";
-  $("statCount").textContent=state.entries.length;
-  render();
-}
-
-/* RENDER */
-function render(){
-  const q=$("q").value.toLowerCase();
-  $("grid").innerHTML=state.entries.filter(e=>
-    !q||(`${e.id} ${e.name} ${(e.tags||[]).join(" ")}`.toLowerCase().includes(q))
-  ).map(e=>`
-    <div class="card">
-      <div class="id">${e.id}</div>
-      <div class="name">${e.name}</div>
-      <div class="badge">${e.status}</div>
-      <div class="cardActions">
-        <button class="mini" onclick="openEntry('${e.entry_path}')">Open</button>
-        <button class="mini" onclick="copyCitation('${e.id}')">Citation</button>
+  <!-- MODAL -->
+  <div class="modal" id="modal">
+    <div class="modalCard" role="dialog" aria-modal="true">
+      <div class="modalHead">
+        <div class="modalTitle">
+          <b id="mTitle">Entry</b>
+          <span id="mSub">—</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <button class="btn" id="mCopy">Copy</button>
+          <button class="btn" id="mSource">Source</button>
+          <div class="closeX" id="mClose" aria-label="Close">✕</div>
+        </div>
       </div>
-    </div>`).join("");
-}
+      <div class="modalBody">
+        <pre class="viewer" id="mBody">Loading…</pre>
+      </div>
+    </div>
+  </div>
 
-/* MODAL */
-async function openEntry(p){
-  const t=await fetch(url(p)).then(r=>r.text());
-  $("modalBody").textContent=t;
-  $("modal").classList.add("open");
-}
-function closeModal(){$("modal").classList.remove("open")}
+  <div class="toast" id="toast">Copied.</div>
 
-/* MARKET LENS */
-function showLens(el){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  el.classList.add("active");
-  $("ledger").style.display="none";
-  $("lens").classList.add("open");
-}
-function showLedger(el){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  el.classList.add("active");
-  $("lens").classList.remove("open");
-  $("ledger").style.display="block";
-}
-function backToLedger(){showLedger(document.querySelector(".tab"))}
-function runLens(){
-  state.watch={generated:new Date().toISOString(),items:state.entries};
-  $("lensOut").textContent=JSON.stringify(state.watch,null,2);
-}
-function copyLens(){navigator.clipboard.writeText($("lensOut").textContent)}
+  <script>
+    /***********************
+     * APEX OMPC/ATA — single-file site (final)
+     * - robust GitHub Pages project pathing
+     * - big persistent watermark logo
+     * - particles + constellation web
+     * - ledger + market lens modes (no dead buttons)
+     * - client-safe modal viewer (no GitHub 404 leakage)
+     * - viewer city: geolocation (if allowed) then timezone inference
+     ***********************/
 
-/* UTIL */
-function copyCitation(id){
-  navigator.clipboard.writeText("APEX/ATA · "+id);
-}
-function copyPattern(){
-  navigator.clipboard.writeText("APEX/ATA Citation: {ID} · {ENTITY} · {DATE} · {SOURCE}");
-}
-function openRepo(){window.open("https://github.com/kawal393/ompc-1")}
+    const state = {
+      entries: [],
+      registrySource: null,
+      currentModal: null,
+      lastWatchlistText: ""
+    };
 
-/* CITY DETECT */
-(function(){
-  $("statTZ").textContent=Intl.DateTimeFormat().resolvedOptions().timeZone;
-  try{
-    const geo=new BDCReverseGeocode();
-    geo.getClientLocation(r=>{
-      $("statCity").textContent=r.city||r.locality||$("statTZ").textContent.split("/").pop();
-    });
-  }catch{
-    $("statCity").textContent=$("statTZ").textContent.split("/").pop();
-  }
-})();
+    const $ = (id)=>document.getElementById(id);
 
-/* PARTICLES */
-(function(){
-  const c=$("bg"),ctx=c.getContext("2d");
-  let w,h,p=[];
-  function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
-  function seed(){p=[...Array(140)].map(()=>({x:Math.random()*w,y:Math.random()*h,vx:.3-Math.random()*.6,vy:.3-Math.random()*.6}))}
-  function tick(){
-    ctx.clearRect(0,0,w,h);
-    for(const a of p){
-      a.x+=a.vx;a.y+=a.vy;
-      if(a.x<0||a.x>w)a.vx*=-1;
-      if(a.y<0||a.y>h)a.vy*=-1;
-      ctx.fillStyle="rgba(210,178,93,.6)";
-      ctx.beginPath();ctx.arc(a.x,a.y,2,0,7);ctx.fill();
-      for(const b of p){
-        const d=Math.hypot(a.x-b.x,a.y-b.y);
-        if(d<160){
-          ctx.strokeStyle="rgba(210,178,93,"+(1-d/160)*.25+")";
-          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
-        }
+    // Determine base path for GitHub Pages project sites (e.g. /ompc-1/)
+    function computeBase(){
+      const pathParts = location.pathname.split("/").filter(Boolean);
+      const isGitHubIO = /github\.io$/i.test(location.hostname);
+      if (isGitHubIO && pathParts.length >= 1) return "/" + pathParts[0] + "/";
+      // If custom domain, keep current directory base:
+      return location.pathname.endsWith("/") ? location.pathname : location.pathname.replace(/\/[^\/]*$/, "/");
+    }
+    const BASE = computeBase();
+
+    function url(path){
+      return new URL(path.replace(/^\//,""), location.origin + BASE).toString();
+    }
+
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"), 1200);
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+    }
+
+    // LOGOS (small + watermark) with strong persistence
+    (function loadLogos(){
+      const small = $("logoImg");
+      const wm = $("wmImg");
+
+      const sigil = url("apex-sigil.png");
+      const watermark = url("apex-watermark.png"); // optional
+
+      // Small logo: try apex-sigil.png always
+      small.src = sigil + "?v=" + Date.now();
+      small.onerror = ()=>{
+        // inline SVG fallback if image missing
+        small.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+            <defs>
+              <radialGradient id="g" cx="30%" cy="30%" r="80%">
+                <stop offset="0" stop-color="#f2d88c" stop-opacity=".45"/>
+                <stop offset=".35" stop-color="#d2b25d" stop-opacity=".20"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".0"/>
+              </radialGradient>
+            </defs>
+            <rect width="96" height="96" fill="#07090b"/>
+            <circle cx="48" cy="48" r="46" fill="url(#g)"/>
+            <path d="M48 10 L76 30 L76 66 L48 86 L20 66 L20 30 Z" fill="none" stroke="#d2b25d" stroke-width="2" opacity=".9"/>
+            <path d="M48 20 L67 33 L67 63 L48 76 L29 63 L29 33 Z" fill="none" stroke="#f2d88c" stroke-width="1.6" opacity=".75"/>
+            <circle cx="48" cy="48" r="6" fill="#d2b25d" opacity=".9"/>
+            <path d="M48 26 V70 M26 48 H70" stroke="#77b6ff" stroke-width="1.2" opacity=".45"/>
+          </svg>
+        `);
+      };
+
+      // Watermark: try apex-watermark.png first, fallback to apex-sigil.png
+      wm.src = watermark + "?v=" + Date.now();
+      wm.onerror = ()=>{
+        wm.src = sigil + "?v=" + Date.now();
+      };
+    })();
+
+    // LINKS
+    $("btnRepo").onclick = ()=> window.open("https://github.com/kawal393/ompc-1", "_blank");
+    $("btnCopyPattern").onclick = ()=>{
+      const pattern = `APEX/ATA Citation: {ENTRY_ID} • {ENTITY} • {JURISDICTION} • {SOURCE_DOC} • {DATE_CAPTURED} • URL: {SOURCE_URL}`;
+      navigator.clipboard?.writeText(pattern).then(()=>toast("Citation pattern copied."));
+    };
+    $("btnEnter").onclick = ()=> $("ledger").scrollIntoView({behavior:"smooth", block:"start"});
+    $("btnRefresh").onclick = ()=> boot(true);
+
+    // MODE SWITCH
+    function setMode(mode){
+      const ledger = $("modeLedger");
+      const market = $("modeMarket");
+      const tLedger = $("tabLedger");
+      const tMarket = $("tabMarket");
+
+      if(mode==="market"){
+        ledger.classList.remove("active");
+        market.classList.add("active");
+        tLedger.classList.remove("active");
+        tMarket.classList.add("active");
+        window.scrollTo({top: 0, behavior:"smooth"});
+      } else {
+        market.classList.remove("active");
+        ledger.classList.add("active");
+        tMarket.classList.remove("active");
+        tLedger.classList.add("active");
+        $("ledger").scrollIntoView({behavior:"smooth", block:"start"});
       }
     }
-    requestAnimationFrame(tick);
-  }
-  resize();seed();tick();addEventListener("resize",()=>{resize();seed()});
-})();
+    $("btnLens").onclick = ()=> setMode("market");
+    $("tabMarket").onclick = ()=> setMode("market");
+    $("tabLedger").onclick = ()=> setMode("ledger");
+    $("btnBackLedger").onclick = ()=> setMode("ledger");
 
-/* INIT */
-$("q").oninput=render;
-load();
-</script>
+    // FILTERS
+    $("q").addEventListener("input", ()=> render());
+    $("statusFilter").addEventListener("change", ()=> render());
+    $("tagFilter").addEventListener("change", ()=> render());
+
+    // MODAL
+    function openModal(entry, content){
+      state.currentModal = entry;
+      $("mTitle").textContent = entry.name || entry.id || "Entry";
+      $("mSub").textContent = `${entry.id} • ${(entry.jurisdiction || "Public Record")} • ${(entry.source_doc || "Source Document")}`;
+      $("mBody").textContent = content || "No content.";
+      $("modal").classList.add("open");
+    }
+    function closeModal(){
+      $("modal").classList.remove("open");
+      state.currentModal = null;
+    }
+    $("mClose").onclick = closeModal;
+    $("modal").addEventListener("click", (e)=>{ if(e.target.id==="modal") closeModal(); });
+
+    $("mCopy").onclick = ()=>{
+      const e = state.currentModal;
+      if(!e) return;
+      const line = `APEX/ATA • ${e.id} • ${e.name} • ${(e.jurisdiction || "—")} • ${(e.source_doc || "—")} • ${(e.updated || "—")}`;
+      navigator.clipboard?.writeText(line).then(()=>toast("Copied."));
+    };
+
+    $("mSource").onclick = ()=>{
+      const e = state.currentModal;
+      if(!e) return;
+      if (e.source_url) return window.open(e.source_url, "_blank");
+      if (e.entry_path) return window.open(url(e.entry_path), "_blank");
+    };
+
+    // FETCH HELPERS
+    async function fetchJson(p){
+      const res = await fetch(url(p) + "?v=" + Date.now(), { cache:"no-store" });
+      if(!res.ok) throw new Error(res.status + " " + res.statusText);
+      return await res.json();
+    }
+    async function fetchText(p){
+      const res = await fetch(url(p) + "?v=" + Date.now(), { cache:"no-store" });
+      if(!res.ok) throw new Error(res.status + " " + res.statusText);
+      return await res.text();
+    }
+
+    // REGISTRY LOADER
+    async function loadRegistry(){
+      // priority: registry/index.json
+      try{
+        const reg = await fetchJson("registry/index.json");
+        if (reg && Array.isArray(reg.entries)) {
+          state.registrySource = "registry/index.json";
+          return reg;
+        }
+      }catch(e){}
+
+      // fallback: _index.json
+      try{
+        const fileList = await fetchJson("_index.json");
+        if (fileList && Array.isArray(fileList.files)) {
+          state.registrySource = "_index.json";
+          const entries = fileList.files.map(fn=>{
+            const idGuess = fn.replace(".md","").split("-").slice(0,3).join("-");
+            const nameGuess = fn.replace(".md","").split("-").slice(3).join(" ");
+            return {
+              id: idGuess,
+              name: nameGuess || fn,
+              summary: "Public attestation record.",
+              status: "published",
+              entry_path: "entries/" + fn,
+              tags: []
+            };
+          });
+          return { updated: new Date().toISOString().slice(0,10), entries };
+        }
+      }catch(e){}
+
+      state.registrySource = state.registrySource || "registry/index.json";
+      return { updated: new Date().toISOString().slice(0,10), entries: [] };
+    }
+
+    function normalizeEntry(e, updated){
+      const id = e.id || "";
+      const name = e.name || id;
+      const statusRaw = (e.status || "published").toLowerCase();
+
+      // client-safe presentation mapping: "unverified" -> "published" (still keep raw internally)
+      let status = statusRaw;
+      if (statusRaw === "unverified") status = "published";
+
+      return {
+        id,
+        name,
+        summary: e.summary || "Public attestation record.",
+        status,
+        status_raw: statusRaw,
+        entry_path: e.entry_path || e.path || "",
+        tags: Array.isArray(e.tags) ? e.tags : [],
+        jurisdiction: e.jurisdiction || "",
+        source_doc: e.source_doc || "",
+        source_url: e.source_url || "",
+        updated: e.updated || updated || ""
+      };
+    }
+
+    function badgeClass(s){
+      if(s==="verified") return "badge verified";
+      if(s==="published") return "badge published";
+      return "badge";
+    }
+
+    async function openEntry(e){
+      try{
+        const md = await fetchText(e.entry_path);
+        openModal(e, md);
+      }catch(err){
+        openModal(e, `ENTRY LOAD FAILED\n\n${e.entry_path}\n\n${String(err)}`);
+      }
+    }
+
+    function citationText(e){
+      const parts = [
+        "APEX/ATA",
+        e.id,
+        e.name,
+        e.jurisdiction || "—",
+        e.source_doc || "—",
+        e.updated || "—",
+        e.source_url ? ("URL: " + e.source_url) : ""
+      ].filter(Boolean);
+      return parts.join(" • ");
+    }
+
+    function sourceLink(e){
+      return e.source_url || url(e.entry_path);
+    }
+
+    function buildTagFilter(){
+      const tagSet = new Set();
+      for(const e of state.entries){
+        for(const t of (e.tags||[])) tagSet.add(t);
+      }
+      const sel = $("tagFilter");
+      const cur = sel.value;
+      sel.innerHTML = `<option value="all">Tag: All</option>` + [...tagSet].sort().map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+      if ([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+    }
+
+    function matches(e, query, status, tag){
+      const q = (query||"").trim().toLowerCase();
+      const statusOk = (status==="all") ? true : (e.status_raw === status || e.status === status);
+      const tagOk = (tag==="all") ? true : (e.tags||[]).map(x=>String(x).toLowerCase()).includes(tag.toLowerCase());
+      if(!statusOk || !tagOk) return false;
+      if(!q) return true;
+
+      const hay = [
+        e.id, e.name, e.summary,
+        e.jurisdiction, e.source_doc,
+        (e.tags||[]).join(" ")
+      ].join(" ").toLowerCase();
+
+      return hay.includes(q);
+    }
+
+    function render(){
+      const query = $("q").value;
+      const status = $("statusFilter").value;
+      const tag = $("tagFilter").value;
+
+      const list = state.entries.filter(e => matches(e, query, status, tag));
+      $("hint").textContent = `${list.length} visible • ${state.entries.length} total • ${state.registrySource || "—"}`;
+
+      const html = list.map(e=>{
+        const tags = (e.tags||[]).slice(0,6).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("");
+        return `
+          <div class="card">
+            <div class="metaTop">
+              <div class="id">${escapeHtml(e.id)}</div>
+              <div class="${badgeClass(e.status)}">${escapeHtml(e.status)}</div>
+            </div>
+            <div class="name">${escapeHtml(e.name)}</div>
+            <div class="summary">${escapeHtml(e.summary || "")}</div>
+            <div class="tags">${tags}</div>
+            <div class="cardActions">
+              <button class="mini" data-open="${escapeHtml(e.id)}">Open</button>
+              <button class="mini" data-cite="${escapeHtml(e.id)}">Copy Citation</button>
+              <button class="mini" data-src="${escapeHtml(e.id)}">Source</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      $("grid").innerHTML = html || `
+        <div class="panel" style="grid-column:1/-1">
+          <h3>No results</h3>
+          <p>Adjust search / filters. Registry loaded: <b>${escapeHtml(state.registrySource||"—")}</b></p>
+        </div>`;
+
+      $("grid").querySelectorAll("[data-open]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.getAttribute("data-open");
+          const e = state.entries.find(x=>x.id===id);
+          if(e) openEntry(e);
+        };
+      });
+      $("grid").querySelectorAll("[data-cite]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.getAttribute("data-cite");
+          const e = state.entries.find(x=>x.id===id);
+          if(!e) return;
+          navigator.clipboard?.writeText(citationText(e)).then(()=>toast("Citation copied."));
+        };
+      });
+      $("grid").querySelectorAll("[data-src]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.getAttribute("data-src");
+          const e = state.entries.find(x=>x.id===id);
+          if(!e) return;
+          window.open(sourceLink(e), "_blank");
+        };
+      });
+    }
+
+    // MARKET LENS
+    function runLens(){
+      // “Surface Mode” watchlist: deterministic, client-safe, no mechanics
+      const now = new Date().toISOString();
+      const items = state.entries.map(e=>({
+        id: e.id,
+        name: e.name,
+        status: e.status,
+        entry_path: e.entry_path,
+        tags: e.tags || [],
+        updated: e.updated || ""
+      }));
+
+      const out = {
+        generated: now,
+        source: state.registrySource || "registry/index.json",
+        count: items.length,
+        items
+      };
+
+      const text = JSON.stringify(out, null, 2);
+      state.lastWatchlistText = text
+      $("lensOut").textContent = text;
+      toast("Lens ran. Watchlist generated.");
+    }
+
+    $("btnRunLens").onclick = runLens;
+
+    $("btnCopyWatch").onclick = ()=>{
+      const txt = state.lastWatchlistText || $("lensOut").textContent || "";
+      if(!txt.trim()) return toast("Nothing to copy.");
+      navigator.clipboard?.writeText(txt).then(()=>toast("Watchlist copied."));
+    };
+
+    // VIEWER CITY (smart + safe)
+    async function setViewerCity(){
+      // default: inferred by timezone
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Sydney";
+      $("statTZ").textContent = tz;
+
+      const tzMap = {
+        "Australia/Melbourne":"Melbourne",
+        "Australia/Sydney":"Sydney",
+        "Australia/Brisbane":"Brisbane",
+        "Australia/Perth":"Perth",
+        "Australia/Adelaide":"Adelaide",
+        "Australia/Darwin":"Darwin",
+        "Australia/Hobart":"Hobart",
+        "Australia/Canberra":"Canberra"
+      };
+
+      let fallbackCity = tzMap[tz] || (tz.includes("Australia") ? "Australia" : "Global");
+
+      $("statViewer").textContent = fallbackCity;
+
+      // if viewer allows location -> reverse lookup city via tiny free service (no key)
+      // If blocked/denied, we keep timezone-based city.
+      if(!("geolocation" in navigator)) return;
+
+      const geo = ()=> new Promise((resolve, reject)=>{
+        navigator.geolocation.getCurrentPosition(
+          p=>resolve(p),
+          e=>reject(e),
+          { enableHighAccuracy:false, timeout:6000, maximumAge: 60*60*1000 }
+        );
+      });
+
+      try{
+        const pos = await geo();
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        // Reverse geocode: OpenStreetMap Nominatim (public). If it fails, keep fallback.
+        const endpoint = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+
+        const res = await fetch(endpoint, {
+          headers: { "Accept":"application/json" }
+        });
+
+        if(!res.ok) return;
+
+        const data = await res.json();
+        const a = data.address || {};
+        const city = a.city || a.town || a.suburb || a.village || a.county || fallbackCity;
+
+        $("statViewer").textContent = city;
+      }catch(e){
+        // ignore (keep fallback)
+      }
+    }
+
+    // BOOT
+    async function boot(force){
+      $("year").textContent = String(new Date().getFullYear());
+      $("statLocale").textContent = navigator.language || "en-AU";
+
+      await setViewerCity();
+
+      const reg = await loadRegistry();
+      const updated = reg.updated || new Date().toISOString().slice(0,10);
+
+      state.entries = (reg.entries||[]).map(e=>normalizeEntry(e, updated));
+      state.registrySource = state.registrySource || "registry/index.json";
+
+      $("statRegistry").textContent = state.registrySource;
+      $("statEntries").textContent = String(state.entries.length);
+      $("footSrc").textContent = state.registrySource;
+
+      buildTagFilter();
+      render();
+    }
+
+    // PARTICLES + CONSTELLATION (heavy + mystical + mobile safe)
+    function startParticles(){
+      const c = $("bg");
+      const ctx = c.getContext("2d", { alpha:true });
+
+      let w=0,h=0,dpr=1;
+      let t=0;
+
+      const N = 170;
+      const LINK = 210;
+      const SPEED = 0.42;
+
+      let particles = [];
+
+      function resize(){
+        dpr = Math.min(2.25, window.devicePixelRatio || 1);
+        w = Math.floor(window.innerWidth);
+        h = Math.floor(window.innerHeight);
+        c.width = Math.floor(w*dpr);
+        c.height = Math.floor(h*dpr);
+        c.style.width = w+"px";
+        c.style.height = h+"px";
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+      }
+
+      function rand(min,max){ return min + Math.random()*(max-min); }
+
+      function seed(){
+        particles = Array.from({length:N}, () => ({
+          x: rand(0,w),
+          y: rand(0,h),
+          r: rand(1.1, 3.4),
+          vx: rand(-SPEED, SPEED),
+          vy: rand(-SPEED, SPEED),
+          a: rand(0.35, 0.98),
+          phase: rand(0, Math.PI*2),
+          kind: Math.random() < 0.78 ? "gold" : "blue"
+        }));
+      }
+
+      function vignette(){
+        const g = ctx.createRadialGradient(w*0.5, h*0.35, 0, w*0.5, h*0.55, Math.max(w,h)*0.92);
+        g.addColorStop(0, "rgba(210,178,93,0.12)");
+        g.addColorStop(0.52, "rgba(120,190,255,0.05)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+      }
+
+      function nebula(){
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = "rgba(210,178,93,0.10)";
+        ctx.fillRect(0, (Math.sin(t*0.33)*18 + h*0.22), w, 96);
+        ctx.fillStyle = "rgba(120,190,255,0.08)";
+        ctx.fillRect(0, (Math.cos(t*0.26)*18 + h*0.50), w, 120);
+        ctx.globalAlpha = 1;
+      }
+
+      function tick(){
+        t += 0.016;
+        ctx.clearRect(0,0,w,h);
+
+        vignette();
+        nebula();
+
+        for(const p of particles){
+          p.x += p.vx;
+          p.y += p.vy;
+
+          const pulse = (Math.sin(t + p.phase) * 0.18 + 1);
+
+          if(p.x < -30) p.x = w+30;
+          if(p.x > w+30) p.x = -30;
+          if(p.y < -30) p.y = h+30;
+          if(p.y > h+30) p.y = -30;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r*pulse, 0, Math.PI*2);
+
+          if(p.kind === "gold"){
+            ctx.shadowColor = "rgba(210,178,93,1)";
+            ctx.shadowBlur = 18;
+            ctx.fillStyle = `rgba(210,178,93,${p.a})`;
+          }else{
+            ctx.shadowColor = "rgba(140,190,255,1)";
+            ctx.shadowBlur = 14;
+            ctx.fillStyle = `rgba(140,190,255,${p.a*0.75})`;
+          }
+          ctx.fill();
+        }
+
+        ctx.shadowBlur = 0;
+        for(let i=0;i<particles.length;i++){
+          for(let j=i+1;j<particles.length;j++){
+            const a = particles[i], b = particles[j];
+            const dx=a.x-b.x, dy=a.y-b.y;
+            const dist = Math.hypot(dx,dy);
+            if(dist < LINK){
+              const alpha = (1 - dist/LINK) * 0.34;
+              ctx.strokeStyle = `rgba(210,178,93,${alpha})`;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(a.x,a.y);
+              ctx.lineTo(b.x,b.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      resize();
+      seed();
+      tick();
+      window.addEventListener("resize", ()=>{ resize(); seed(); });
+    }
+
+    // 3D PARALLAX (watermark tilt + subtle glow)
+    function startParallax(){
+      const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if(prefersReduced) return;
+
+      let tx=0, ty=0;
+      let currentX=0, currentY=0;
+
+      function onMove(x, y){
+        const nx = (x / window.innerWidth) * 2 - 1;
+        const ny = (y / window.innerHeight) * 2 - 1;
+        tx = nx * 6;  // degrees
+        ty = ny * -6;
+      }
+
+      window.addEventListener("mousemove", (e)=> onMove(e.clientX, e.clientY), { passive:true });
+      window.addEventListener("touchmove", (e)=>{
+        const t = e.touches && e.touches[0];
+        if(t) onMove(t.clientX, t.clientY);
+      }, { passive:true });
+
+      function loop(){
+        currentX += (ty - currentX) * 0.06;
+        currentY += (tx - currentY) * 0.06;
+
+        document.documentElement.style.setProperty("--tiltX", currentX.toFixed(2) + "deg");
+        document.documentElement.style.setProperty("--tiltY", currentY.toFixed(2) + "deg");
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    // START
+    startParticles();
+    startParallax();
+    boot(false);
+  </script>
 </body>
 </html>
