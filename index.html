@@ -10,30 +10,22 @@
     :root{
       --bg0:#050607;
       --bg1:#07090b;
-
       --panel: rgba(14,16,19,.72);
       --panel2: rgba(10,12,15,.55);
-
       --stroke: rgba(255,255,255,.08);
       --stroke2: rgba(210,178,93,.22);
-
       --text:#e9edf3;
       --muted:#aeb7c2;
       --muted2:#7f8a97;
-
       --gold:#d2b25d;
       --gold2:#f2d88c;
       --blue:#77b6ff;
       --danger:#ff5d5d;
-
       --shadow: 0 22px 70px rgba(0,0,0,.55);
       --shadow2: 0 12px 40px rgba(0,0,0,.52);
-
       --radius: 18px;
       --radius2: 26px;
-
       --max: 1120px;
-
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
@@ -60,51 +52,51 @@
       opacity:1;
     }
 
-    /* BIG BACKGROUND SIGIL (always visible) */
+    /* BIG BACKGROUND SIGIL (persistent) */
     .bgSigil{
       position:fixed; inset:0;
-      z-index:1;          /* behind UI (wrap is z=3), above canvas */
+      z-index:1;
       pointer-events:none;
       display:grid;
       place-items:center;
-      opacity:.16;        /* strong enough to be seen */
-      filter:saturate(1.05) contrast(1.06);
+      opacity:.22;
+      filter: saturate(1.02) contrast(1.05);
+      mix-blend-mode: screen;
     }
     .bgSigil img{
-      width:min(92vw, 1100px);
+      width:min(100vw, 1400px);
       height:auto;
-      opacity:.95;
-      mix-blend-mode:screen;
-      filter:
-        drop-shadow(0 0 38px rgba(210,178,93,.22))
-        drop-shadow(0 0 80px rgba(120,190,255,.10));
-      transform: translateY(60px);
+      opacity:.85;
+      transform: translate3d(0,0,0);
       will-change: transform;
-      animation: sigilFloat 8.5s ease-in-out infinite;
+      filter: drop-shadow(0 40px 120px rgba(0,0,0,.55));
     }
-    @keyframes sigilFloat{
-      0%{ transform: translateY(64px) scale(1.00) }
-      50%{ transform: translateY(48px) scale(1.02) }
-      100%{ transform: translateY(64px) scale(1.00) }
+    .bgSigil:after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 420px at 50% 15%, rgba(210,178,93,.22), transparent 62%),
+        radial-gradient(700px 520px at 40% 60%, rgba(120,190,255,.10), transparent 62%),
+        radial-gradient(1000px 700px at 50% 120%, rgba(0,0,0,.25), transparent 55%);
+      opacity:.75;
     }
 
-    /* SIGIL / AURA overlay */
-    .sigilAura{
+    /* SIGIL / AURA (subtle overlay) */
+    .sigil{
       position:fixed; inset:0;
       z-index:2;
       pointer-events:none;
       background:
-        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.16), transparent 62%),
-        radial-gradient(800px 520px at 50% 60%, rgba(0,0,0,.18), transparent 60%),
-        radial-gradient(700px 420px at 30% 70%, rgba(120,190,255,.08), transparent 65%);
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.14), transparent 62%),
+        radial-gradient(800px 520px at 50% 60%, rgba(0,0,0,.18), transparent 60%);
       mix-blend-mode:screen;
-      opacity:.60;
+      opacity:.55;
     }
 
     /* LAYOUT */
     .wrap{
       position:relative;
-      z-index:3; /* above bgSigil + aura */
+      z-index:3;
       max-width:var(--max);
       margin:0 auto;
       padding:24px 18px 60px;
@@ -132,7 +124,7 @@
     }
 
     .logo{
-      width:42px; height:42px;
+      width:44px; height:44px;
       border-radius:999px;
       overflow:hidden;
       border:1px solid rgba(210,178,93,.25);
@@ -141,6 +133,7 @@
       flex:0 0 auto;
       background: radial-gradient(circle at 30% 30%, rgba(242,216,140,.18), rgba(0,0,0,.45));
     }
+
     .logo img{
       width:100%; height:100%;
       object-fit:cover;
@@ -226,6 +219,9 @@
       border-color: rgba(210,178,93,.42);
       background: linear-gradient(180deg, rgba(210,178,93,.18), rgba(0,0,0,.12));
     }
+    .btn.soft{
+      border-color: rgba(255,255,255,.10);
+    }
 
     /* HERO */
     .hero{
@@ -241,10 +237,10 @@
       content:"";
       position:absolute; inset:-1px;
       background:
-        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.18), transparent 60%),
-        radial-gradient(780px 520px at 20% 50%, rgba(120,190,255,.10), transparent 60%),
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.20), transparent 60%),
+        radial-gradient(780px 520px at 20% 50%, rgba(120,190,255,.12), transparent 60%),
         linear-gradient(180deg, rgba(255,255,255,.03), transparent);
-      opacity:.75;
+      opacity:.85;
       pointer-events:none;
     }
     .heroInner{
@@ -340,32 +336,18 @@
       color:var(--muted);
       backdrop-filter: blur(10px);
     }
-    .stat b{color: var(--text); font-weight:600}
-
-    /* NAV TABS */
-    .tabs{
-      margin-top:12px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .tab{
+    .stat b{color: var(--text); font-weight:650}
+    .stat .miniLink{
       cursor:pointer;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.16);
-      color: var(--text);
-      padding:8px 10px;
+      border:1px solid rgba(210,178,93,.22);
+      padding:4px 8px;
       border-radius:999px;
+      background: rgba(210,178,93,.08);
+      color: rgba(242,216,140,.95);
       font-size:11px;
-      letter-spacing:.12em;
+      letter-spacing:.08em;
       text-transform:uppercase;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 28px rgba(0,0,0,.25);
-      transition: transform .16s ease, border-color .16s ease, background .16s ease;
     }
-    .tab:hover{ transform: translateY(-1px); border-color: rgba(210,178,93,.35); background: rgba(210,178,93,.06); }
-    .tab.active{ border-color: rgba(210,178,93,.55); background: rgba(210,178,93,.08); }
 
     /* TOOLBAR */
     .toolbar{
@@ -399,7 +381,6 @@
       min-width: 0;
     }
     .search .hint{color:var(--muted2); font-size:12px; white-space:nowrap}
-
     .select{
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.18);
@@ -413,11 +394,85 @@
       cursor:pointer;
     }
 
-    /* PANELS: Ledger vs Lens */
+    /* SECTIONS */
     .section{
-      margin-top:12px;
+      margin-top:14px;
+      border-radius: var(--radius2);
+      border:1px solid rgba(255,255,255,.09);
+      background: rgba(0,0,0,.18);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+      position:relative;
     }
-    .section.hidden{ display:none; }
+    .section:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.12), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      opacity:.8;
+      pointer-events:none;
+    }
+    .sectionInner{
+      position:relative;
+      padding:14px 14px 12px;
+    }
+    .sectionHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .sectionHead h2{
+      margin:0;
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color: rgba(210,178,93,.95);
+    }
+    .sectionHead p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:12px;
+      max-width: 72ch;
+      line-height:1.45;
+    }
+    .sectionActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .monoBox{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      border-radius: 16px;
+      padding:12px;
+      overflow:auto;
+      max-height: 520px;
+    }
+    pre.mono{
+      margin:0;
+      font-family: var(--mono);
+      font-size:12px;
+      line-height:1.55;
+      white-space:pre-wrap;
+      word-break:break-word;
+      color: #e9edf3;
+    }
+    .lensGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+    @media (max-width: 860px){
+      .lensGrid{grid-template-columns: 1fr}
+    }
 
     /* CARDS */
     .grid{
@@ -551,90 +606,6 @@
       box-shadow: 0 16px 40px rgba(0,0,0,.45);
     }
 
-    /* Lens UI */
-    .lensGrid{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
-    .lensPanel{
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.20);
-      border-radius: var(--radius2);
-      box-shadow: var(--shadow2);
-      backdrop-filter: blur(10px);
-      overflow:hidden;
-      position:relative;
-    }
-    .lensPanel:before{
-      content:"";
-      position:absolute; inset:-1px;
-      pointer-events:none;
-      background:
-        radial-gradient(900px 420px at 50% 0%, rgba(210,178,93,.18), transparent 60%),
-        radial-gradient(700px 520px at 20% 60%, rgba(120,190,255,.10), transparent 62%),
-        linear-gradient(180deg, rgba(255,255,255,.03), transparent);
-      opacity:.85;
-    }
-    .lensHead{
-      position:relative;
-      padding:14px 14px 12px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .lensHead h2{
-      margin:0;
-      font-size:12px;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      color: rgba(210,178,93,.95);
-    }
-    .lensBody{
-      position:relative;
-      padding:14px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-    }
-    .lensOut{
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      border-radius: 16px;
-      padding:12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      backdrop-filter: blur(10px);
-    }
-    .lensOut h3{
-      margin:0 0 6px 0;
-      font-size:11px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color: rgba(242,216,140,.92);
-    }
-    .lensOut p{
-      margin:0;
-      color: var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-    .lensOut pre{
-      margin:10px 0 0;
-      padding:10px;
-      border-radius:14px;
-      background: rgba(0,0,0,.28);
-      border:1px solid rgba(255,255,255,.08);
-      color: #e9edf3;
-      font-family: var(--mono);
-      font-size:12px;
-      line-height:1.5;
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
     /* FOOTER */
     .foot{
       margin-top:18px;
@@ -647,7 +618,7 @@
     /* MODAL VIEWER */
     .modal{
       position:fixed; inset:0;
-      z-index:80;
+      z-index:50;
       display:none;
       align-items:center;
       justify-content:center;
@@ -741,7 +712,7 @@
       left:50%;
       bottom:18px;
       transform:translateX(-50%);
-      z-index:90;
+      z-index:80;
       display:none;
       padding:10px 12px;
       border-radius:999px;
@@ -761,18 +732,17 @@
 <body>
   <canvas id="bg"></canvas>
 
-  <!-- BIG BACKGROUND SIGIL -->
   <div class="bgSigil">
-    <img id="bgSigilImg" src="" alt="APEX Sigil" />
+    <img id="bgSigilImg" alt="APEX Sigil Background" />
   </div>
 
-  <div class="sigilAura"></div>
+  <div class="sigil"></div>
 
   <div class="wrap">
     <div class="topbar">
       <div class="brand">
         <div class="logo" aria-label="APEX Sigil">
-          <img id="logoImg" src="" alt="APEX" />
+          <img id="logoImg" alt="APEX" />
         </div>
         <div class="brandText">
           <div class="kicker">APEX — OMPC / ATA</div>
@@ -805,16 +775,15 @@
           <div class="statRow" style="margin-top:12px">
             <div class="stat">Registry: <b id="statRegistry">Loading…</b></div>
             <div class="stat">Entries: <b id="statEntries">0</b></div>
-            <div class="stat">Viewer: <b id="statViewer">Sydney</b></div>
-            <div class="stat">Timezone: <b id="statTZ">Australia/Sydney</b></div>
-            <div class="stat">Locale: <b id="statLocale">en-AU</b></div>
-          </div>
-
-          <div class="tabs" aria-label="Sections">
-            <button class="tab active" id="tabLedger">Ledger</button>
-            <button class="tab" id="tabLens">Market Lens</button>
-            <button class="tab" id="tabPricing">Pricing</button>
-            <button class="tab" id="tabContact">Contact</button>
+            <div class="stat">Viewer: <b id="statViewer">—</b></div>
+            <div class="stat">Timezone: <b id="statTZ">—</b></div>
+            <div class="stat">Locale: <b id="statLocale">—</b></div>
+            <div class="stat">Updated: <b id="statUpdated">—</b></div>
+            <div class="stat">
+              Location:
+              <b id="statLocMode">Approx</b>
+              <span class="miniLink" id="btnPrecise">Use precise location</span>
+            </div>
           </div>
         </div>
 
@@ -835,92 +804,142 @@
           <div class="panel">
             <h3>Client-Safe Viewer</h3>
             <p>
-              Entries open inside this site (modal). No raw GitHub pages. No 404 leakage. The client never sees backend.
+              Entries open inside this site (modal). No raw GitHub pages. No 404 leakage. The client never sees backend paths.
             </p>
           </div>
         </div>
       </div>
+
+      <div class="ctaRow" style="padding:0 18px 16px; margin-top:-6px">
+        <button class="btn soft" id="navLedger">Ledger</button>
+        <button class="btn soft" id="navMarketLens">Market Lens</button>
+        <button class="btn soft" id="navPricing">Pricing</button>
+        <button class="btn soft" id="navContact">Contact</button>
+      </div>
     </section>
 
-    <!-- LEDGER SECTION -->
-    <section class="section" id="sectionLedger">
-      <div class="toolbar" id="ledger">
-        <div class="search">
-          <span style="opacity:.8">🔎</span>
-          <input id="q" placeholder="Search: company, tags, ID, jurisdiction…" />
-          <span class="hint" id="hint">Ready</span>
-        </div>
-
-        <select class="select" id="statusFilter">
-          <option value="all">Status: All</option>
-          <option value="verified">Verified</option>
-          <option value="published">Published</option>
-          <option value="unverified">Unverified</option>
-        </select>
-
-        <select class="select" id="tagFilter">
-          <option value="all">Tag: All</option>
-        </select>
+    <!-- LEDGER TOOLBAR -->
+    <div class="toolbar" id="ledger">
+      <div class="search">
+        <span style="opacity:.8">🔎</span>
+        <input id="q" placeholder="Search: company, tags, ID, jurisdiction…" />
+        <span class="hint" id="hint">Ready</span>
       </div>
 
-      <div class="grid" id="grid"></div>
-    </section>
+      <select class="select" id="statusFilter">
+        <option value="all">Status: All</option>
+        <option value="verified">Verified</option>
+        <option value="published">Published</option>
+        <option value="unverified">Unverified</option>
+      </select>
 
-    <!-- LENS SECTION -->
-    <section class="section hidden" id="sectionLens">
-      <div class="lensGrid">
-        <div class="lensPanel">
-          <div class="lensHead">
-            <h2>Market Lens (Surface Mode)</h2>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-              <button class="btn gold" id="btnRunLens">Run Lens</button>
-              <button class="btn" id="btnCopyLens">Copy Watchlist</button>
-              <button class="btn" id="btnBackLedger">Back to Ledger</button>
-            </div>
+      <select class="select" id="tagFilter">
+        <option value="all">Tag: All</option>
+      </select>
+    </div>
+
+    <!-- LEDGER GRID -->
+    <div class="grid" id="grid"></div>
+
+    <!-- MARKET LENS SECTION -->
+    <section class="section" id="marketlens">
+      <div class="sectionInner">
+        <div class="sectionHead">
+          <div>
+            <h2>Market Lens • Surface Mode</h2>
+            <p>
+              This generates a **client-safe watchlist** from the public registry. No internal mechanics. No backend leakage.
+              You get structured outputs you can sell.
+            </p>
           </div>
-
-          <div class="lensBody">
-            <div class="lensOut">
-              <h3>Output</h3>
-              <p id="lensSummary">Press <b>Run Lens</b> to generate a client-safe watchlist from the public registry.</p>
-              <pre id="lensOut">—</pre>
-            </div>
-
-            <div class="lensOut">
-              <h3>What this is</h3>
-              <p>
-                This is a surface-only lens that produces a structured watchlist from the public ledger data. It does not reveal internal mechanics.
-                It lives entirely inside this page, so the client never sees raw repository paths.
-              </p>
-            </div>
+          <div class="sectionActions">
+            <button class="btn gold" id="lensRun">Run Lens</button>
+            <button class="btn" id="lensCopy">Copy Watchlist</button>
+            <button class="btn" id="lensBack">Back to Ledger</button>
           </div>
         </div>
+
+        <div class="lensGrid">
+          <div class="panel">
+            <h3>Top Watchlist</h3>
+            <p id="lensTopHint">Run Lens to populate.</p>
+            <div id="lensTop" style="margin-top:10px; display:grid; gap:10px;"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Tag Clusters</h3>
+            <p id="lensTagHint">Run Lens to populate.</p>
+            <div id="lensTags" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="monoBox">
+          <pre class="mono" id="lensOut">Press “Run Lens” to generate the structured watchlist output.</pre>
+        </div>
       </div>
     </section>
 
-    <!-- PRICING SECTION -->
-    <section class="section hidden" id="sectionPricing">
-      <div class="panel">
-        <h3>Pricing</h3>
-        <p>
-          Ledger: Public. Lens: Paid. Watchlists: subscription.
-          <br/>This section is client-facing placeholder text — replace later with Gumroad links when ready.
-        </p>
+    <!-- PRICING -->
+    <section class="section" id="pricing">
+      <div class="sectionInner">
+        <div class="sectionHead">
+          <div>
+            <h2>Pricing</h2>
+            <p>Surface is public. Lens is paid. We sell outcomes, not internals.</p>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:0">
+          <div class="card">
+            <div class="metaTop">
+              <div class="id">TIER 1</div>
+              <div class="badge published">Surface</div>
+            </div>
+            <div class="name">Public Ledger</div>
+            <div class="summary">Browse entries, copy citations, client-safe viewer.</div>
+            <div class="tags">
+              <span class="tag">public</span><span class="tag">citation</span><span class="tag">registry</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="metaTop">
+              <div class="id">TIER 2</div>
+              <div class="badge verified">Lens</div>
+            </div>
+            <div class="name">Market Lens</div>
+            <div class="summary">Watchlists, mismatch signals, catalysts, timelines (client output).</div>
+            <div class="tags">
+              <span class="tag">paid</span><span class="tag">watchlist</span><span class="tag">signals</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- CONTACT SECTION -->
-    <section class="section hidden" id="sectionContact">
-      <div class="panel">
-        <h3>Contact</h3>
-        <p>
-          Add your client intake method here (email / form link). Keep it clean.
-        </p>
+    <!-- CONTACT -->
+    <section class="section" id="contact">
+      <div class="sectionInner">
+        <div class="sectionHead">
+          <div>
+            <h2>Contact</h2>
+            <p>Attach this to Lovable portal later. For now: link out to your core nodes.</p>
+          </div>
+          <div class="sectionActions">
+            <button class="btn" id="btnNodeTranslator">Corporate Translator</button>
+            <button class="btn" id="btnNodeGhost">Ghost Protocol</button>
+            <button class="btn" id="btnNodeLedger">APEX-ATA Ledger</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Portal Strategy</h3>
+          <p>
+            Lovable = luxury front door. GitHub Pages = live engine. This page becomes a “node” you route into from the portal.
+          </p>
+        </div>
       </div>
     </section>
 
     <div class="foot">
-      © <span id="year"></span> APEX • OMPC / ATA Surface • registry/index.json • entries/*.md
+      © <span id="year"></span> APEX • OMPC / ATA Surface • <span id="footPath">registry/index.json</span>
     </div>
   </div>
 
@@ -948,32 +967,42 @@
 
   <script>
     /***********************
-     * APEX OMPC/ATA — Single-file site
-     * Includes:
-     * - Big background sigil (always visible)
-     * - Particles + web links
-     * - Client-safe modal entry viewer (no GitHub 404 leakage)
-     * - Market Lens SECTION (real navigation + runnable watchlist)
+     * APEX OMPC/ATA — Single-file site (10/10 build)
+     * - GitHub Pages project-safe base paths
+     * - Big background sigil (persistent)
+     * - Particles + parallax + device tilt
+     * - Market Lens: productized output
+     * - Viewer city: timezone default + optional precise location
+     * - Client-safe modal entry viewer
      ***********************/
 
     const state = {
       entries: [],
       registrySource: null,
       currentModal: null,
-      lastWatchlist: ""
+      lensLast: null,
+      parallax: { x: 0, y: 0, tx: 0, ty: 0 }
     };
 
     const $ = (id)=>document.getElementById(id);
 
-    // BASE (GitHub Pages project-safe)
+    // Detect base path for GitHub Pages project sites:
+    // user.github.io/REPO/...
     function baseHref(){
-      const p = location.pathname;
-      if (p.includes("/ompc-1/")) return "/ompc-1/";
+      const p = location.pathname || "/";
+      if (location.hostname.endsWith("github.io")){
+        const parts = p.split("/").filter(Boolean);
+        // /REPO/... => base /REPO/
+        if (parts.length >= 1) return "/" + parts[0] + "/";
+        return "/";
+      }
+      // non-github: current directory
       return p.endsWith("/") ? p : p.replace(/\/[^\/]*$/, "/");
     }
     const BASE = baseHref();
+
     function url(path){
-      return new URL(path.replace(/^\//,""), location.origin + BASE).toString();
+      return new URL(String(path).replace(/^\//,""), location.origin + BASE).toString();
     }
 
     function toast(msg){
@@ -987,61 +1016,33 @@
       return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
     }
 
-    // LOGOS (top + background) — same file, same source, always persistent
-    (function bindLogos(){
-      const topImg = $("logoImg");
-      const bgImg  = $("bgSigilImg");
-      const src = url("apex-sigil.png") + "?v=" + Date.now();
+    function scrollToId(id){
+      const el = document.getElementById(id);
+      if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+    }
 
-      topImg.src = src;
-      bgImg.src  = src;
+    // NAV buttons
+    $("navLedger").onclick = ()=>scrollToId("ledger");
+    $("navMarketLens").onclick = ()=>scrollToId("marketlens");
+    $("navPricing").onclick = ()=>scrollToId("pricing");
+    $("navContact").onclick = ()=>scrollToId("contact");
 
-      // If apex-sigil.png missing, fall back to subtle invisible behavior (but keep page working)
-      topImg.addEventListener("error", ()=>{ topImg.style.display="none"; });
-      bgImg.addEventListener("error", ()=>{ bgImg.style.display="none"; });
-    })();
+    $("btnEnter").onclick = ()=>scrollToId("ledger");
+    $("btnLens").onclick = ()=>scrollToId("marketlens");
+    $("btnRefresh").onclick = ()=>boot(true);
 
-    // UI LINKS
+    // External repo
     $("btnRepo").onclick = ()=> window.open("https://github.com/kawal393/ompc-1", "_blank");
+
+    // Node buttons (replace links later with your real nodes)
+    $("btnNodeTranslator").onclick = ()=> toast("Attach Corporate Translator link here (Lovable portal will route).");
+    $("btnNodeGhost").onclick = ()=> toast("Attach Ghost Protocol link here (Lovable portal will route).");
+    $("btnNodeLedger").onclick = ()=> toast("Attach APEX-ATA Ledger link here (Lovable portal will route).");
+
     $("btnCopyPattern").onclick = ()=>{
       const pattern = `APEX/ATA Citation: {ENTRY_ID} • {ENTITY} • {JURISDICTION} • {SOURCE_DOC} • {DATE_CAPTURED} • URL: {SOURCE_URL}`;
       navigator.clipboard.writeText(pattern).then(()=>toast("Citation pattern copied."));
     };
-
-    $("btnEnter").onclick = ()=> {
-      setSection("ledger");
-      document.getElementById("ledger").scrollIntoView({behavior:"smooth", block:"start"});
-    };
-    $("btnLens").onclick = ()=> { setSection("lens"); };
-
-    $("btnRefresh").onclick = ()=> boot(true);
-
-    // Tabs
-    $("tabLedger").onclick  = ()=> setSection("ledger");
-    $("tabLens").onclick    = ()=> setSection("lens");
-    $("tabPricing").onclick = ()=> setSection("pricing");
-    $("tabContact").onclick = ()=> setSection("contact");
-
-    function setActiveTab(which){
-      const map = { ledger:"tabLedger", lens:"tabLens", pricing:"tabPricing", contact:"tabContact" };
-      ["tabLedger","tabLens","tabPricing","tabContact"].forEach(id=>$(id).classList.remove("active"));
-      $(map[which]).classList.add("active");
-    }
-
-    function setSection(which){
-      $("sectionLedger").classList.add("hidden");
-      $("sectionLens").classList.add("hidden");
-      $("sectionPricing").classList.add("hidden");
-      $("sectionContact").classList.add("hidden");
-
-      if(which==="ledger") $("sectionLedger").classList.remove("hidden");
-      if(which==="lens") $("sectionLens").classList.remove("hidden");
-      if(which==="pricing") $("sectionPricing").classList.remove("hidden");
-      if(which==="contact") $("sectionContact").classList.remove("hidden");
-
-      setActiveTab(which);
-      window.scrollTo({ top: 0, behavior:"smooth" });
-    }
 
     // Filters
     $("q").addEventListener("input", ()=> render());
@@ -1052,7 +1053,7 @@
     function openModal(entry, content){
       state.currentModal = entry;
       $("mTitle").textContent = entry.name || entry.id || "Entry";
-      $("mSub").textContent = entry.id + " • " + (entry.jurisdiction || "Public Record") + " • " + (entry.source_doc || "Source Document");
+      $("mSub").textContent = `${entry.id} • ${entry.jurisdiction || "Public Record"} • ${entry.source_doc || "Source Document"}`;
       $("mBody").textContent = content || "No content.";
       $("modal").classList.add("open");
     }
@@ -1066,9 +1067,10 @@
     $("mCopy").onclick = ()=>{
       const e = state.currentModal;
       if(!e) return;
-      const line = `APEX/ATA • ${e.id} • ${e.name} • ${e.jurisdiction || "—"} • ${e.source_doc || "—"} • ${e.updated || "—"}`;
+      const line = `APEX/ATA • ${e.id} • ${e.name} • ${e.jurisdiction || "—"} • ${e.source_doc || "—"} • ${e.updated || "—"}${e.source_url ? " • URL: " + e.source_url : ""}`;
       navigator.clipboard.writeText(line).then(()=>toast("Copied."));
     };
+
     $("mSource").onclick = ()=>{
       const e = state.currentModal;
       if(!e) return;
@@ -1076,7 +1078,6 @@
       if (e.entry_path) return window.open(url(e.entry_path), "_blank");
     };
 
-    // Data loading
     async function fetchJson(p){
       const res = await fetch(url(p) + "?v=" + Date.now(), { cache:"no-store" });
       if(!res.ok) throw new Error(res.status + " " + res.statusText);
@@ -1088,8 +1089,8 @@
       return await res.text();
     }
 
+    // Registry: prefer registry/index.json, fallback _index.json
     async function loadRegistry(){
-      // 1) preferred: registry/index.json (structured)
       try{
         const reg = await fetchJson("registry/index.json");
         if (reg && Array.isArray(reg.entries)) {
@@ -1098,15 +1099,13 @@
         }
       }catch(e){}
 
-      // 2) fallback: _index.json (file list)
       try{
         const fileList = await fetchJson("_index.json");
         if (fileList && Array.isArray(fileList.files)) {
           state.registrySource = "_index.json";
           const entries = fileList.files.map(fn=>{
-            const parts = fn.replace(".md","").split("-");
-            const idGuess = parts.slice(0,3).join("-");
-            const nameGuess = parts.slice(3).join(" ");
+            const idGuess = fn.replace(".md","").split("-").slice(0,3).join("-");
+            const nameGuess = fn.replace(".md","").split("-").slice(3).join(" ");
             return {
               id: idGuess,
               name: nameGuess || fn,
@@ -1120,17 +1119,16 @@
         }
       }catch(e){}
 
+      state.registrySource = state.registrySource || "registry/index.json";
       return { updated: new Date().toISOString().slice(0,10), entries: [] };
     }
 
     function normalizeEntry(e, updated){
       const id = e.id || "";
       const name = e.name || id;
+      const statusRaw = String(e.status || "published").toLowerCase();
 
-      const statusRaw = (e.status || "published").toLowerCase();
-
-      // DISPLAY RULE:
-      // Clients should see "published" unless you explicitly mark "verified".
+      // Client-facing label: do NOT scream "unverified" at clients.
       let status = statusRaw;
       if (statusRaw === "unverified") status = "published";
 
@@ -1191,8 +1189,7 @@
     }
 
     function sourceLink(e){
-      // If you stored a source_url, show that; else show entry_path
-      return e.source_url || url(e.entry_path || "");
+      return e.source_url || e.entry_path || "";
     }
 
     function citationText(e){
@@ -1238,6 +1235,7 @@
 
       $("grid").innerHTML = html || `<div class="panel" style="grid-column:1/-1"><h3>No results</h3><p>Adjust search / filters. Registry loaded: <b>${escapeHtml(state.registrySource||"—")}</b></p></div>`;
 
+      // bind
       $("grid").querySelectorAll("[data-open]").forEach(btn=>{
         btn.onclick = ()=>{
           const id = btn.getAttribute("data-open");
@@ -1263,11 +1261,203 @@
       });
     }
 
+    // ===== Market Lens (productized) =====
+    function scoreEntry(e){
+      // Simple surface-mode scoring: prioritize tags + recency + verified
+      let s = 0;
+      if ((e.tags||[]).length) s += Math.min(6, e.tags.length) * 2;
+      if (e.status_raw === "verified" || e.status === "verified") s += 6;
+      // Recency bonus if updated today
+      const today = new Date().toISOString().slice(0,10);
+      if (e.updated && String(e.updated).slice(0,10) === today) s += 5;
+      return s;
+    }
+
+    function runLens(){
+      const source = state.registrySource || "registry/index.json";
+      const now = new Date().toISOString();
+
+      const items = state.entries.map(e=>({
+        id: e.id,
+        name: e.name,
+        status: e.status,
+        tags: e.tags || [],
+        updated: e.updated || ""
+      }));
+
+      // Top watchlist by score
+      const ranked = state.entries
+        .slice()
+        .sort((a,b)=>scoreEntry(b)-scoreEntry(a))
+        .slice(0, 10);
+
+      // Tag clusters
+      const tagCounts = {};
+      for(const e of state.entries){
+        for(const t of (e.tags||[])){
+          const k = String(t).toLowerCase();
+          tagCounts[k] = (tagCounts[k]||0) + 1;
+        }
+      }
+      const clusters = Object.entries(tagCounts)
+        .sort((a,b)=>b[1]-a[1])
+        .slice(0, 16);
+
+      // Render top watchlist cards
+      const topEl = $("lensTop");
+      topEl.innerHTML = ranked.map(e=>`
+        <div class="card" style="margin:0">
+          <div class="metaTop">
+            <div class="id">${escapeHtml(e.id)}</div>
+            <div class="${badgeClass(e.status)}">${escapeHtml(e.status)}</div>
+          </div>
+          <div class="name">${escapeHtml(e.name)}</div>
+          <div class="summary">${escapeHtml(e.summary || "Watchlist candidate from public registry.")}</div>
+          <div class="cardActions">
+            <button class="mini" data-open="${escapeHtml(e.id)}">Open</button>
+            <button class="mini" data-cite="${escapeHtml(e.id)}">Copy Citation</button>
+          </div>
+        </div>
+      `).join("");
+
+      topEl.querySelectorAll("[data-open]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.getAttribute("data-open");
+          const e = state.entries.find(x=>x.id===id);
+          if(e) openEntry(e);
+        };
+      });
+      topEl.querySelectorAll("[data-cite]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.getAttribute("data-cite");
+          const e = state.entries.find(x=>x.id===id);
+          if(!e) return;
+          navigator.clipboard.writeText(citationText(e)).then(()=>toast("Citation copied."));
+        };
+      });
+
+      const tagsEl = $("lensTags");
+      tagsEl.innerHTML = clusters.map(([t,c])=>`<span class="tag">${escapeHtml(t)} • ${c}</span>`).join("");
+      $("lensTopHint").textContent = `Top 10 ranked from ${state.entries.length} entries.`;
+      $("lensTagHint").textContent = `Top tag clusters (by frequency).`;
+
+      const out = {
+        generated: now,
+        source,
+        count: state.entries.length,
+        top_watchlist: ranked.map(e=>({ id:e.id, name:e.name, status:e.status, tags:e.tags||[], updated:e.updated||"" })),
+        tag_clusters: clusters.map(([t,c])=>({ tag:t, count:c })),
+        items
+      };
+
+      state.lensLast = out;
+      $("lensOut").textContent = JSON.stringify(out, null, 2);
+      toast("Lens ran. Watchlist generated.");
+    }
+
+    $("lensRun").onclick = ()=> runLens();
+    $("lensCopy").onclick = ()=>{
+      if(!state.lensLast) return toast("Run Lens first.");
+      navigator.clipboard.writeText(JSON.stringify(state.lensLast, null, 2)).then(()=>toast("Watchlist copied."));
+    };
+    $("lensBack").onclick = ()=> scrollToId("ledger");
+
+    // ===== Location intelligence =====
+    function tzToCity(tz){
+      // Fast, permissionless “smart” default.
+      // This is not perfect — but it’s instant and feels aware.
+      if(!tz) return "—";
+      const map = {
+        "Australia/Melbourne":"Melbourne",
+        "Australia/Sydney":"Sydney",
+        "Australia/Brisbane":"Brisbane",
+        "Australia/Perth":"Perth",
+        "Australia/Adelaide":"Adelaide",
+        "Australia/Hobart":"Hobart",
+        "Australia/Darwin":"Darwin"
+      };
+      return map[tz] || tz.split("/").pop().replace(/_/g," ");
+    }
+
+    async function reverseGeocode(lat, lon){
+      // CORS-friendly, no-key endpoint (client-side).
+      // If it ever fails, we fall back to timezone city.
+      const u = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&localityLanguage=en`;
+      const res = await fetch(u, { cache:"no-store" });
+      if(!res.ok) throw new Error("Reverse geocode failed");
+      const j = await res.json();
+      const city = j.city || j.locality || j.principalSubdivision || j.countryName || "—";
+      return city;
+    }
+
+    async function usePreciseLocation(){
+      if(!("geolocation" in navigator)) return toast("Geolocation not supported on this device.");
+      $("statLocMode").textContent = "Requesting…";
+      navigator.geolocation.getCurrentPosition(async (pos)=>{
+        try{
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const city = await reverseGeocode(lat, lon);
+          $("statViewer").textContent = city;
+          $("statLocMode").textContent = "Precise";
+          toast("Viewer location updated.");
+        }catch(e){
+          $("statLocMode").textContent = "Approx";
+          toast("Precise location failed. Using timezone.");
+        }
+      }, ()=>{
+        $("statLocMode").textContent = "Approx";
+        toast("Permission denied. Using timezone.");
+      }, { enableHighAccuracy:false, timeout:8000, maximumAge:600000 });
+    }
+
+    $("btnPrecise").onclick = ()=> usePreciseLocation();
+
+    // ===== Logo + background sigil guard =====
+    (function logoGuard(){
+      const logo = $("logoImg");
+      const bg = $("bgSigilImg");
+
+      const sigilUrl = url("apex-sigil.png") + "?v=" + Date.now();
+      logo.src = sigilUrl;
+      bg.src = sigilUrl;
+
+      // Fallback inline SVG if image fails
+      const fallbackSvg =
+        "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+            <defs>
+              <radialGradient id="g" cx="30%" cy="30%" r="80%">
+                <stop offset="0" stop-color="#f2d88c" stop-opacity=".55"/>
+                <stop offset=".35" stop-color="#d2b25d" stop-opacity=".20"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".0"/>
+              </radialGradient>
+            </defs>
+            <rect width="96" height="96" fill="#07090b"/>
+            <circle cx="48" cy="48" r="46" fill="url(#g)"/>
+            <path d="M48 10 L76 30 L76 66 L48 86 L20 66 L20 30 Z" fill="none" stroke="#d2b25d" stroke-width="2" opacity=".9"/>
+            <path d="M48 20 L67 33 L67 63 L48 76 L29 63 L29 33 Z" fill="none" stroke="#f2d88c" stroke-width="1.6" opacity=".75"/>
+            <circle cx="48" cy="48" r="6" fill="#d2b25d" opacity=".9"/>
+            <path d="M48 26 V70 M26 48 H70" stroke="#77b6ff" stroke-width="1.2" opacity=".45"/>
+          </svg>
+        `);
+
+      logo.addEventListener("error", ()=>{ logo.src = fallbackSvg; });
+      bg.addEventListener("error", ()=>{ bg.src = fallbackSvg; });
+    })();
+
+    // ===== Boot =====
     async function boot(){
       $("year").textContent = String(new Date().getFullYear());
-      $("statViewer").textContent = "Sydney";
-      $("statTZ").textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Sydney";
+
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Melbourne";
+      $("statTZ").textContent = tz;
       $("statLocale").textContent = navigator.language || "en-AU";
+
+      // Default viewer city (smart, permissionless)
+      const tzCity = tzToCity(tz);
+      $("statViewer").textContent = tzCity;
+      $("statLocMode").textContent = "Approx";
 
       const reg = await loadRegistry();
       const updated = reg.updated || new Date().toISOString().slice(0,10);
@@ -1277,46 +1467,14 @@
 
       $("statRegistry").textContent = state.registrySource;
       $("statEntries").textContent = String(state.entries.length);
+      $("statUpdated").textContent = updated;
+      $("footPath").textContent = state.registrySource;
 
       buildTagFilter();
       render();
     }
 
-    // MARKET LENS (real action)
-    $("btnBackLedger").onclick = ()=> setSection("ledger");
-
-    $("btnRunLens").onclick = ()=>{
-      // Simple surface-only lens: create a watchlist from current entries (no mechanics, no claims)
-      const now = new Date().toISOString().slice(0,10);
-      const top = state.entries.slice(0, 15).map(e=>({
-        id: e.id, name: e.name,
-        status: e.status,
-        tags: e.tags || [],
-        updated: e.updated || now
-      }));
-
-      const watchlist = {
-        generated: new Date().toISOString(),
-        source: state.registrySource || "registry/index.json",
-        count: top.length,
-        items: top
-      };
-
-      state.lastWatchlist = JSON.stringify(watchlist, null, 2);
-      $("lensOut").textContent = state.lastWatchlist;
-      $("lensSummary").innerHTML = `Watchlist generated from the public registry. Source: <b>${escapeHtml(watchlist.source)}</b> • Items: <b>${watchlist.count}</b>`;
-      toast("Lens ran. Watchlist generated.");
-    };
-
-    $("btnCopyLens").onclick = ()=>{
-      if(!state.lastWatchlist || state.lastWatchlist==="—"){
-        toast("Run Lens first.");
-        return;
-      }
-      navigator.clipboard.writeText(state.lastWatchlist).then(()=>toast("Watchlist copied."));
-    };
-
-    // PARTICLES — mystical and visible on mobile
+    // ===== Particles: mystical + parallax =====
     function startParticles(){
       const c = document.getElementById("bg");
       const ctx = c.getContext("2d", { alpha:true });
@@ -1375,13 +1533,52 @@
         ctx.fillRect(0,0,w,h);
       }
 
+      // Parallax input (mouse/touch)
+      function setTargetFromPointer(x, y){
+        const nx = (x / Math.max(1,w)) * 2 - 1;
+        const ny = (y / Math.max(1,h)) * 2 - 1;
+        state.parallax.tx = nx;
+        state.parallax.ty = ny;
+      }
+      window.addEventListener("mousemove", (e)=> setTargetFromPointer(e.clientX, e.clientY), {passive:true});
+      window.addEventListener("touchmove", (e)=>{
+        if(e.touches && e.touches[0]) setTargetFromPointer(e.touches[0].clientX, e.touches[0].clientY);
+      }, {passive:true});
+
+      // Device tilt (mobile)
+      window.addEventListener("deviceorientation", (e)=>{
+        if(e.beta == null || e.gamma == null) return;
+        // Clamp and normalize
+        const gx = Math.max(-30, Math.min(30, e.gamma)) / 30;
+        const by = Math.max(-30, Math.min(30, e.beta)) / 30;
+        state.parallax.tx = gx;
+        state.parallax.ty = by;
+      }, {passive:true});
+
       function tick(){
         t += 0.016;
+
+        // Smooth parallax
+        state.parallax.x += (state.parallax.tx - state.parallax.x) * 0.06;
+        state.parallax.y += (state.parallax.ty - state.parallax.y) * 0.06;
+
+        // Move background sigil slightly for “alive” effect
+        const bg = document.getElementById("bgSigilImg");
+        if(bg){
+          const px = state.parallax.x * 14;
+          const py = state.parallax.y * 10;
+          bg.style.transform = `translate3d(${px}px, ${py}px, 0) scale(1.02)`;
+        }
+
         ctx.clearRect(0,0,w,h);
 
         vignette();
         nebula();
 
+        const ox = state.parallax.x * 18;
+        const oy = state.parallax.y * 14;
+
+        // particles
         for(const p of particles){
           p.x += p.vx;
           p.y += p.vy;
@@ -1393,8 +1590,11 @@
           if(p.y < -30) p.y = h+30;
           if(p.y > h+30) p.y = -30;
 
+          const x = p.x + ox;
+          const y = p.y + oy;
+
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r*pulse, 0, Math.PI*2);
+          ctx.arc(x, y, p.r*pulse, 0, Math.PI*2);
 
           if(p.kind === "gold"){
             ctx.shadowColor = "rgba(210,178,93,1)";
@@ -1408,19 +1608,21 @@
           ctx.fill();
         }
 
+        // web links
         ctx.shadowBlur = 0;
         for(let i=0;i<particles.length;i++){
           for(let j=i+1;j<particles.length;j++){
             const a = particles[i], b = particles[j];
-            const dx=a.x-b.x, dy=a.y-b.y;
+            const ax=a.x+ox, ay=a.y+oy, bx=b.x+ox, by=b.y+oy;
+            const dx=ax-bx, dy=ay-by;
             const dist = Math.hypot(dx,dy);
             if(dist < LINK){
               const alpha = (1 - dist/LINK) * 0.34;
               ctx.strokeStyle = `rgba(210,178,93,${alpha})`;
               ctx.lineWidth = 1;
               ctx.beginPath();
-              ctx.moveTo(a.x,a.y);
-              ctx.lineTo(b.x,b.y);
+              ctx.moveTo(ax,ay);
+              ctx.lineTo(bx,by);
               ctx.stroke();
             }
           }
@@ -1432,13 +1634,12 @@
       resize();
       seed();
       tick();
-      window.addEventListener("resize", ()=>{ resize(); seed(); });
+      window.addEventListener("resize", ()=>{ resize(); seed(); }, {passive:true});
     }
 
     // START
     startParticles();
     boot();
-    setSection("ledger");
   </script>
 </body>
 </html>
